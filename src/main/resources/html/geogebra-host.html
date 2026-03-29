@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <title>GeoGebra</title>
+  <script src="https://www.geogebra.org/apps/deployggb.js"></script>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #eaeaea; }
+    #ggb-wrap { height: 100%; width: 100%; min-height: 200px; min-width: 200px; box-sizing: border-box; }
+  </style>
+</head>
+<body>
+<div id="ggb-wrap"></div>
+<script>
+  /**
+   * 对齐 GGBPuppy {@code GGBViewer.jsx}：Java 替换 ___GGB_APP___（classic|3d）与 ___GGB_USE_3D___（true|false）；
+   * 注入宽高用 #ggb-wrap 的 client 尺寸，避免 JavaFX WebView 下 window.innerWidth 为 0。
+   */
+  var GGB_APP_NAME_STR = "___GGB_APP___";
+  var GGB_USE_3D = ___GGB_USE_3D___;
+
+  window.ggbApi = null;
+  window.ggbReady = false;
+
+  function effectiveSize() {
+    var el = document.getElementById('ggb-wrap');
+    var w = el ? el.clientWidth : 0;
+    var h = el ? el.clientHeight : 0;
+    if (w < 8 || h < 8) {
+      w = window.innerWidth || document.documentElement.clientWidth || 0;
+      h = window.innerHeight || document.documentElement.clientHeight || 0;
+    }
+    w = Math.floor(Math.max(400, w));
+    h = Math.floor(Math.max(300, h));
+    return { w: w, h: h };
+  }
+
+  function syncGgbApiFromGlobal() {
+    try {
+      var api = window.ggbApplet;
+      if (api && typeof api.evalCommand === 'function') {
+        window.ggbApi = api;
+        window.ggbReady = true;
+        return true;
+      }
+    } catch (e) { /* ignore */ }
+    return false;
+  }
+
+  function resizeAppletToView() {
+    syncGgbApiFromGlobal();
+    var api = window.ggbApplet || window.ggbApi;
+    if (!api || typeof api.setSize !== 'function') {
+      return;
+    }
+    var z = effectiveSize();
+    try {
+      api.setSize(z.w, z.h);
+    } catch (e) { /* ignore */ }
+  }
+
+  function onAppletLoaded() {
+    syncGgbApiFromGlobal();
+    if (!window.ggbApi) {
+      return;
+    }
+    resizeAppletToView();
+    if (GGB_USE_3D) {
+      try {
+        if (typeof window.ggbApi.executeCommand === 'function') {
+          window.ggbApi.executeCommand('ShowView(5, true)');
+        }
+      } catch (e) { /* ignore */ }
+    }
+  }
+
+  function buildParameters(aw, ah) {
+    return {
+      appName: GGB_APP_NAME_STR,
+      width: aw,
+      height: ah,
+      showToolBar: true,
+      showAlgebraInput: true,
+      showMenuBar: false,
+      showResetIcon: true,
+      enable3D: GGB_USE_3D,
+      enableLabelDrags: true,
+      enableShiftDragZoom: true,
+      enableRightClick: true,
+      capturingThreshold: null,
+      showToolBarHelp: false,
+      errorDialogsActive: false,
+      useBrowserForJS: false,
+      language: 'zh',
+      appletOnLoad: function () {
+        var loaded = window.ggbApplet || null;
+        if (loaded && typeof loaded.evalCommand === 'function') {
+          window.ggbApi = loaded;
+          window.ggbReady = true;
+        } else {
+          syncGgbApiFromGlobal();
+        }
+        onAppletLoaded();
+      }
+    };
+  }
+
+  var injectStarted = false;
+  var deployScriptRetries = 0;
+
+  function doInject() {
+    if (injectStarted) {
+      return;
+    }
+    injectStarted = true;
+    var z = effectiveSize();
+    var parameters = buildParameters(z.w, z.h);
+    try {
+      var applet = new GGBApplet(parameters, true);
+      applet.inject('ggb-wrap');
+    } catch (err) {
+      console.error('GGBApplet.inject failed', err);
+      injectStarted = false;
+      return;
+    }
+    var n = 0;
+    var poll = setInterval(function () {
+      if (syncGgbApiFromGlobal() || ++n > 600) {
+        clearInterval(poll);
+      }
+    }, 100);
+    [200, 500, 1200, 2000].forEach(function (ms) {
+      setTimeout(resizeAppletToView, ms);
+    });
+  }
+
+  var dimWaitCount = 0;
+  function scheduleInject() {
+    if (typeof GGBApplet === 'undefined') {
+      if (deployScriptRetries++ > 5) {
+        console.error('deployggb.js 多次加载失败');
+        return;
+      }
+      var s = document.createElement('script');
+      s.src = 'https://www.geogebra.org/apps/deployggb.js?t=' + Date.now();
+      s.async = true;
+      s.onload = function () { scheduleInject(); };
+      document.head.appendChild(s);
+      return;
+    }
+    var el = document.getElementById('ggb-wrap');
+    var cw = el ? el.clientWidth : 0;
+    var ch = el ? el.clientHeight : 0;
+    if ((cw < 8 || ch < 8) && dimWaitCount < 80) {
+      dimWaitCount++;
+      setTimeout(scheduleInject, 80);
+      return;
+    }
+    dimWaitCount = 0;
+    setTimeout(doInject, 40);
+  }
+
+  window.resizeAppletToView = resizeAppletToView;
+
+  if (typeof ResizeObserver !== 'undefined') {
+    var roWait = setInterval(function () {
+      var el = document.getElementById('ggb-wrap');
+      if (!el) {
+        return;
+      }
+      clearInterval(roWait);
+      try {
+        var ro = new ResizeObserver(function () {
+          resizeAppletToView();
+        });
+        ro.observe(el);
+      } catch (e) { /* ignore */ }
+    }, 50);
+  }
+
+  window.addEventListener('load', function () {
+    setTimeout(scheduleInject, 50);
+  });
+  window.addEventListener('resize', function () {
+    resizeAppletToView();
+  });
+</script>
+</body>
+</html>

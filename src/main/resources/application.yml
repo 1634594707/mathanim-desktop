@@ -1,0 +1,72 @@
+spring:
+  application:
+    name: mathanim-desktop
+  datasource:
+    # 库文件位于 mathanim.data-dir 下；改 data-dir 即可迁出 C 盘（启动时会自动创建目录）
+    url: jdbc:sqlite:${mathanim.data-dir}/mathanim.db
+    driver-class-name: org.sqlite.JDBC
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+
+mathanim:
+  # 数据根目录：SQLite、默认 <data-dir>/jobs、cache/renders 等。迁出 C 盘时改此绝对路径。
+  # 与例题路径一致：均相对于本目录 mathanim-desktop/（见 example-bank 中 examples/manim/）
+  data-dir: "d:/Administrator/Desktop/MathAnim/mathanim-desktop/.mathanim"
+  ai:
+    # 「兼容层」接入：任意 OpenAI 格式 Chat Completions（/v1/chat/completions 或 /api/v3/chat/completions）。
+    # 豆包 Seed 2.0 Pro（火山方舟）：base-url 用下方 api/v3（勿写成 /v1）；api-key 填控制台「API Key」。
+    # 若请求报模型不存在：在方舟「推理接入点」创建后，将 model 改为接入点 ID（形如 ep-xxxxxx）。
+    base-url: https://ark.cn-beijing.volces.com/api/v3
+    api-key: ""
+    model: doubao-seed-2.0-pro
+    python-executable: python
+    # 含首轮生成：例如 4 表示最多 4 次「生成/修补」机会（高难度场景更易在修补轮次内收敛）
+    max-retry-passes: 4
+    # 输出 token 上限；超过对方限额会 HTTP 400，可按控制台说明调高
+    max-completion-tokens: 8192
+  manim:
+    # 终端里 manim 可用，但从 IDE 启动桌面应用时可能读不到 Conda 的 PATH。
+    # 若「检测 Manim」失败，任选其一：
+    # 1) 写 manim 可执行文件绝对路径（示例）:
+    #    - "C:\\Users\\你\\miniconda3\\Scripts\\manim.exe"
+    # 2) 用当前环境的 python -m manim（把 python 换成 conda 里 python.exe 绝对路径更稳）:
+    #    command-prefix:
+    #      - python
+    #      - "-m"
+    #      - manim
+    command-prefix:
+      - manim
+    # 已忽略：实际画质由界面/任务选的 480p|720p|1080p（-ql/-qm/-qh）决定
+    quality-flag: "-ql"
+    # 与 ManimCat 一致显式帧率；15 易卡顿，30 更顺滑；0 表示不传 --fps（用 Manim 默认）
+    frame-rate: 30
+    # 留空 = Manim 默认 Cairo（CPU，JavaFX 预览兼容最好）；opengl = GPU（需 --write_to_movie，部分环境预览仍黑屏可改回留空）
+    renderer: ""
+    # 为 true 时使用 manim render …（需与本机 Manim CLI 一致）
+    use-render-subcommand: false
+    # 复杂场景（大量 always_redraw、1080p）可能超过 10 分钟；仍失败请再酌情调高
+    timeout-seconds: 1200
+    # 任务工作目录：每任务子目录含 generated_scene.py、media/。留空 = <mathanim.data-dir>/jobs
+    jobs-base-dir: ""
+    # 渲染成功后复制 {jobId}.mp4/png 到此目录，任务列表与日志中的路径指向该文件，便于直接打开验证
+    export-media-dir: "d:/Administrator/Desktop/MathAnim/mathanim-desktop/generated-videos"
+  # 一键配音：云端为 OpenAI 兼容 POST {api-base-url}/audio/speech；本地为 IndexTTS2 POST {local-base-url}/tts
+  dubbing:
+    api-base-url: https://api.openai.com/v1
+    api-key: ""
+    api-tts-model: tts-1
+    api-tts-voice: nova
+    local-base-url: http://127.0.0.1:9880
+    local-ref-audio-path: ""
+    ffmpeg-path: ffmpeg
+
+logging:
+  level:
+    root: INFO
+    com.mathanim: DEBUG

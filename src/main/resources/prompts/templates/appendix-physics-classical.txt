@@ -1,0 +1,14 @@
+【物理示意与画面约束】
+- 受力图：明确研究对象，受力箭头从重心或接触点出发；不同性质的力用稳定配色区分（如重力、弹力、摩擦力），旁注用 Text。
+- 矢量：速度、加速度、力等用 Arrow 或 Vector，方向与题设一致；标注物理量符号用 Text（尽量少用 MathTex，除非已确认本机 LaTeX）。
+- 场景与单位：示意图旁可用 Text 标明已知量、方向或单位（SI）；避免无标注的裸线段冒充矢量。
+- 运动学：轨迹、参考系、质点可用 Dot/Circle；多过程分镜时清理上一镜临时对象，避免线叠在一起。
+- 电路/场线（若涉及）：节点与回路清晰，导线横平竖直优先；场线疏密表达强弱趋势即可，不必过度粒子效果。
+- 工程通用：遵守 always_redraw 勿过重循环、禁止对已入场景对象二次 Create、Axes 关默认刻度等与「工程安全」一致的原则。
+
+【manim-physics · 刚体与容器（AI 生成时优先对齐官方示例，避免「自创箱」导致观感变差）】
+- 使用 `from manim_physics import *`，场景基类用 `SpaceScene`（勿复制未实现的 SpaceScene 类定义）。
+- 容器内刚体碰撞：与官方 `test_rigid_mechanics` / 文档 TwoObjectsFalling 一致——**地面 + 左右墙**（`VGroup(ground, wall1, wall2)`），**开口向上**；**默认不要加顶墙**，除非用户明确要「封闭箱」「四面墙」。
+- 刚体几何：优先 **默认大小的 `Circle()`、`Square()`** 及官方示例中的位移/旋转（如 `shift(UP*2)`、`rotate(PI/4)`、`scale(0.5)`），避免随意把物体缩得过小。
+- 接口：`make_rigid_body(...)`、`make_static_body(walls)`；先 `play(DrawBorderThenFill(...))` 再注册刚体。
+- 运行依赖：需安装 `manim-physics`、`pymunk`；若穿模或碰撞不稳，可提高渲染 `--fps`（如 60）。

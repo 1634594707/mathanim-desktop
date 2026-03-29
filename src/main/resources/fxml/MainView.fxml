@@ -1,0 +1,403 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Accordion?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.SVGPath?>
+<?import javafx.scene.media.MediaView?>
+<?import javafx.scene.web.WebView?>
+
+<AnchorPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.mathanim.ui.MainViewController"
+            styleClass="mathanim-root">
+  <BorderPane AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+              AnchorPane.topAnchor="0.0">
+    <top>
+      <HBox fx:id="windowChrome" styleClass="window-chrome" alignment="CENTER_LEFT" spacing="0">
+        <HBox fx:id="windowDragRegion" alignment="CENTER_LEFT" spacing="10" HBox.hgrow="ALWAYS">
+          <padding>
+            <Insets bottom="4" left="14" right="8" top="4"/>
+          </padding>
+          <StackPane styleClass="window-chrome-mark" prefWidth="28" prefHeight="28" minWidth="28" minHeight="28"
+                     maxWidth="28" maxHeight="28">
+            <Region styleClass="brand-mark-paper"/>
+            <SVGPath styleClass="brand-mark-pi"
+                     content="M 4 21 L 4 6.5 L 6.25 6.5 L 6.25 21 Z M 9.75 21 L 9.75 6.5 L 12 6.5 L 12 21 Z M 5.25 6.5 L 10.75 6.5 L 10.75 8.75 L 5.25 8.75 Z"/>
+            <SVGPath styleClass="brand-mark-play"
+                     content="M 15.5 7.5 L 15.5 20.5 L 25.5 14 Z"/>
+          </StackPane>
+          <Label text="MathAnim · 课堂" styleClass="window-title"/>
+        </HBox>
+        <HBox alignment="CENTER" spacing="0">
+          <Button focusTraversable="false" onAction="#onWindowMinimize" styleClass="window-btn" text="−"/>
+          <Button focusTraversable="false" onAction="#onWindowMaximizeRestore" styleClass="window-btn" text="□"/>
+          <Button focusTraversable="false" onAction="#onWindowClose" styleClass="window-btn,window-btn-close" text="×"/>
+        </HBox>
+      </HBox>
+    </top>
+    <center>
+    <TabPane tabClosingPolicy="UNAVAILABLE" styleClass="zen-tab-pane" VBox.vgrow="ALWAYS">
+      <Tab text="创作">
+        <SplitPane dividerPositions="0.45" styleClass="zen-split" orientation="HORIZONTAL">
+          <!-- 左：Studio；勿设 maxWidth，否则分隔条无法拉宽左栏 -->
+          <VBox styleClass="studio-left" minWidth="280" prefWidth="480" spacing="0">
+            <HBox styleClass="studio-header" alignment="CENTER_LEFT" spacing="14">
+              <StackPane styleClass="brand-mark-wrap" prefWidth="44" prefHeight="44" minWidth="44" minHeight="44"
+                         maxWidth="44" maxHeight="44">
+                <Region styleClass="brand-mark-paper"/>
+                <SVGPath styleClass="brand-mark-pi"
+                         content="M 6 34 L 6 9.5 L 10 9.5 L 10 34 Z M 16.5 34 L 16.5 9.5 L 20.5 9.5 L 20.5 34 Z M 8 9.5 L 19 9.5 L 19 13 L 8 13 Z"/>
+                <SVGPath styleClass="brand-mark-play"
+                         content="M 24 10 L 24 33 L 39 21.5 Z"/>
+              </StackPane>
+              <VBox spacing="3">
+                <Label text="MathAnim" styleClass="brand-wordmark"/>
+                <Label text="师生 · 动画备课" styleClass="brand-tagline"/>
+              </VBox>
+              <Region HBox.hgrow="ALWAYS"/>
+              <Label text="Desktop" styleClass="studio-meta"/>
+            </HBox>
+            <HBox styleClass="studio-ready" alignment="CENTER_LEFT" spacing="8">
+              <Label text="① 选模式与例题  ·  ② 填写内容  ·  ③ 一键生成" styleClass="studio-ready-flow"/>
+            </HBox>
+            <ScrollPane fitToWidth="true" styleClass="studio-scroll" hbarPolicy="NEVER" VBox.vgrow="ALWAYS">
+              <VBox spacing="0">
+                <padding>
+                  <Insets bottom="8" left="14" right="14" top="8"/>
+                </padding>
+                <VBox styleClass="zen-section,zen-section-quick" spacing="10">
+                  <fx:define>
+                    <ToggleGroup fx:id="creationModeGroup"/>
+                  </fx:define>
+                  <HBox alignment="CENTER_LEFT">
+                    <Label text="创作" styleClass="zen-section-title"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label text="课堂" styleClass="zen-section-tag"/>
+                  </HBox>
+                  <Label text="直接描述：一句话说明要画什么。题干模式：粘贴题目与解析，AI 自动分镜并生成 Manim。" styleClass="zen-hint" wrapText="true"/>
+                  <HBox styleClass="edu-mode-segment" alignment="CENTER_LEFT" spacing="0">
+                    <ToggleButton fx:id="modeDirectToggle" text="直接描述" toggleGroup="$creationModeGroup"
+                                  selected="true" styleClass="edu-mode-toggle"/>
+                    <ToggleButton fx:id="modeTutorToggle" text="题干 + 解析" toggleGroup="$creationModeGroup"
+                                  styleClass="edu-mode-toggle"/>
+                  </HBox>
+                  <VBox spacing="6">
+                    <Label text="参考例题" styleClass="zen-micro-heading"/>
+                    <ComboBox fx:id="exampleCombo" maxWidth="Infinity" styleClass="edu-example-combo"/>
+                  </VBox>
+                  <VBox fx:id="directModePane" spacing="8">
+                    <Label text="想生成什么（图像或动画）" styleClass="edu-field-label"/>
+                    <TextArea fx:id="conceptInput" prefRowCount="5" wrapText="true" minHeight="120"
+                              promptText="例如：用 Manim 演示勾股定理，配直角三角形标注与配色…"
+                              styleClass="zen-input,concept-hero"/>
+                  </VBox>
+                  <VBox fx:id="tutorModePane" spacing="10" visible="false" managed="false">
+                    <VBox styleClass="edu-tutor-field" spacing="4">
+                      <Label text="题目" styleClass="edu-field-label"/>
+                      <TextArea fx:id="problemInput" prefRowCount="3" wrapText="true" minHeight="72"
+                                promptText="粘贴题干…" styleClass="zen-input,concept-hero"/>
+                    </VBox>
+                    <VBox styleClass="edu-tutor-field" spacing="4">
+                      <Label text="解析与步骤" styleClass="edu-field-label"/>
+                      <TextArea fx:id="solutionInput" prefRowCount="5" wrapText="true" minHeight="120"
+                                promptText="写出关键步骤，便于分镜与配图…" styleClass="zen-input,concept-hero"/>
+                    </VBox>
+                    <VBox styleClass="edu-tutor-field" spacing="4">
+                      <Label text="参考答案（可选）" styleClass="edu-field-label"/>
+                      <TextArea fx:id="answerInput" prefRowCount="2" wrapText="true" minHeight="52"
+                                promptText="可选：标准答案或数值…" styleClass="zen-input,concept-hero"/>
+                    </VBox>
+                  </VBox>
+                  <HBox styleClass="zen-toolbar" alignment="CENTER_LEFT" spacing="8">
+                    <Label text="导出" styleClass="zen-micro-heading"/>
+                    <HBox styleClass="zen-segment" alignment="CENTER_LEFT" spacing="6">
+                      <ChoiceBox fx:id="outputModeChoice" prefWidth="108"/>
+                      <ChoiceBox fx:id="videoQualityChoice" prefWidth="108"/>
+                      <ChoiceBox fx:id="promptLocaleChoice" prefWidth="92"/>
+                    </HBox>
+                  </HBox>
+                  <HBox styleClass="zen-actions-main" alignment="CENTER">
+                    <Button fx:id="oneClickGenerateButton" text="一键生成并渲染" onAction="#onOneClickGenerate" styleClass="button,btn-zen-hero"/>
+                  </HBox>
+                  <Label text="快捷键 Ctrl+Enter 提交（入队 → AI → Manim）" styleClass="zen-hint-subtle" wrapText="true"/>
+                  <HBox spacing="8" alignment="CENTER_LEFT">
+                    <Button text="仅入队" onAction="#onEnqueue" styleClass="button,btn-zen-outline"/>
+                    <Button text="检测 Manim" onAction="#onCheckManim" styleClass="button,btn-zen-ghost"/>
+                  </HBox>
+                </VBox>
+                <Accordion styleClass="zen-accordion">
+                  <panes>
+                    <TitledPane text="高级选项（参考图、提示词覆盖、拆解预览、改代码）" expanded="false" animated="false">
+                      <VBox spacing="0">
+                        <VBox styleClass="zen-section-inner" spacing="8">
+                          <Label text="AI 选项" styleClass="zen-micro-heading"/>
+                          <VBox spacing="8" styleClass="zen-chips-wrap">
+                            <HBox spacing="16" alignment="CENTER_LEFT">
+                              <CheckBox fx:id="useProblemFramingCheck" styleClass="zen-check" text="问题拆解"/>
+                              <CheckBox fx:id="useTwoStageCheck" styleClass="zen-check" text="两阶段（解题→分镜→代码）" selected="true"/>
+                            </HBox>
+                            <CheckBox fx:id="reliableGenerationCheck" styleClass="zen-check" text="稳定优先（少分镜、降失败率）" selected="true" wrapText="true"/>
+                          </VBox>
+                        </VBox>
+                        <VBox styleClass="zen-section-inner" spacing="8">
+                          <HBox alignment="CENTER_LEFT">
+                            <Label text="参考图" styleClass="zen-section-title"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label text="每行 URL" styleClass="zen-section-tag"/>
+                          </HBox>
+                          <Label text="每行一图 URL，建议 ≤4 张" styleClass="zen-hint"/>
+                          <TextArea fx:id="referenceUrlsInput" prefRowCount="2" wrapText="true" minHeight="48"
+                                    promptText="https://…"/>
+                        </VBox>
+                        <VBox styleClass="zen-section-inner" spacing="8">
+                          <HBox alignment="CENTER_LEFT">
+                            <Label text="提示词覆盖" styleClass="zen-section-title"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label text="JSON" styleClass="zen-section-tag"/>
+                          </HBox>
+                          <Label text="多角色提示词覆盖（可选）" styleClass="zen-hint"/>
+                          <TextArea fx:id="promptOverridesJsonInput" prefRowCount="2" wrapText="true" minHeight="44"/>
+                        </VBox>
+                        <VBox styleClass="zen-section-inner" spacing="8">
+                          <HBox alignment="CENTER_LEFT">
+                            <Label text="拆解规划" styleClass="zen-section-title"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label text="预览 JSON" styleClass="zen-section-tag"/>
+                          </HBox>
+                          <Label text="规划 JSON：可预览、粘贴或留空由流水线生成" styleClass="zen-hint"/>
+                          <TextArea fx:id="problemPlanPreview" prefRowCount="4" wrapText="true" minHeight="72"
+                                    promptText="{ … }" styleClass="zen-input,code-editor"/>
+                          <Button text="仅预览拆解" onAction="#onProblemFramingPreview" styleClass="button,btn-zen-outline"/>
+                        </VBox>
+                        <VBox styleClass="zen-section-inner" spacing="10">
+                          <Label text="工具" styleClass="zen-micro-heading"/>
+                          <HBox spacing="8" alignment="CENTER_LEFT">
+                            <Button text="AI → 渲染（所选任务）" onAction="#onAiWorkflow" styleClass="button,btn-zen-soft"/>
+                            <Button text="内置测试" onAction="#onRunBuiltinTest" styleClass="button,btn-zen-ghost"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Button text="取消任务" onAction="#onCancelJob" styleClass="button,btn-zen-danger"/>
+                          </HBox>
+                        </VBox>
+                        <VBox styleClass="zen-section-inner" spacing="8">
+                          <HBox alignment="CENTER_LEFT">
+                            <Label text="修改脚本" styleClass="zen-section-title"/>
+                            <Region HBox.hgrow="ALWAYS"/>
+                            <Label text="Python" styleClass="zen-section-tag"/>
+                          </HBox>
+                          <TextArea fx:id="codeInput" prefRowCount="5" wrapText="true" minHeight="88"
+                                    promptText="generated_scene.py" styleClass="code-editor"/>
+                          <TextArea fx:id="editInstructionsInput" prefRowCount="2" wrapText="true" minHeight="44"
+                                    promptText="修改说明…"/>
+                          <Button text="修改并入队" onAction="#onModifyAndRun" styleClass="button,btn-zen-soft"/>
+                        </VBox>
+                      </VBox>
+                    </TitledPane>
+                  </panes>
+                </Accordion>
+              </VBox>
+            </ScrollPane>
+            <HBox styleClass="studio-footer" alignment="CENTER_LEFT">
+              <Label fx:id="studioStatusLabel" text="&gt; 空闲"
+                     styleClass="studio-prompt,studio-prompt-idle"/>
+              <Region HBox.hgrow="ALWAYS"/>
+              <Label text="创作" styleClass="studio-hint-cap"/>
+            </HBox>
+          </VBox>
+          <!-- 右：输出 / 日志 / 历史（WAITING FOR OUTPUT + HISTORY） -->
+          <BorderPane styleClass="output-pane" minWidth="400">
+            <top>
+              <HBox styleClass="output-status-bar" alignment="CENTER_LEFT">
+                <padding>
+                  <Insets bottom="10" left="16" right="16" top="16"/>
+                </padding>
+                <Label fx:id="outputStatusLabel" text="等待输出"
+                       styleClass="output-status-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+              </HBox>
+            </top>
+            <center>
+              <VBox spacing="8" styleClass="output-preview-column">
+                <padding>
+                  <Insets bottom="6" left="14" right="14" top="4"/>
+                </padding>
+                <HBox alignment="CENTER_LEFT" spacing="10">
+                  <Label text="预览" styleClass="zen-micro-heading"/>
+                  <Label fx:id="outputPreviewPathLabel" styleClass="zen-hint" wrapText="true" maxWidth="320"/>
+                  <Region HBox.hgrow="ALWAYS"/>
+                  <Button fx:id="outputPreviewFullscreenButton" text="全屏" focusTraversable="false"
+                          onAction="#onOutputPreviewFullscreen" styleClass="button,btn-zen-outline" disable="true"/>
+                </HBox>
+                <Label text="双击预览区全屏 · Esc 退出" styleClass="zen-hint-subtle" wrapText="true"/>
+                <StackPane fx:id="outputPreviewStack" minHeight="280" prefHeight="420" styleClass="output-preview-stack" VBox.vgrow="ALWAYS">
+                  <ScrollPane fx:id="outputImageScroll" fitToWidth="true" fitToHeight="true"
+                              styleClass="output-image-scroll" visible="false" managed="false">
+                    <ImageView fx:id="outputImageView" preserveRatio="true" smooth="true"/>
+                  </ScrollPane>
+                  <MediaView fx:id="outputMediaView" preserveRatio="true"/>
+                  <Label fx:id="outputPreviewPlaceholder"
+                         text="在下方选中已完成的任务，即可预览 mp4 / png"
+                         styleClass="zen-hint" wrapText="true" textAlignment="CENTER" maxWidth="360"/>
+                </StackPane>
+                <VBox fx:id="outputVideoTransport" spacing="4" visible="false" managed="false" styleClass="output-video-transport">
+                  <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Button fx:id="outputPreviewPlayToggle" focusTraversable="false" text="暂停"
+                            onAction="#onPreviewPlayToggle" styleClass="button,btn-zen-ghost" disable="true"
+                            minWidth="52"/>
+                    <Slider fx:id="outputPreviewSeek" styleClass="output-preview-seek" min="0" max="1" value="0"
+                            blockIncrement="0.5" HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="outputPreviewTimeLabel" text="0:00 / 0:00" styleClass="zen-hint"
+                           minWidth="100"/>
+                  </HBox>
+                </VBox>
+              </VBox>
+            </center>
+            <bottom>
+              <VBox spacing="8" styleClass="output-history">
+                <padding>
+                  <Insets bottom="14" left="14" right="14" top="12"/>
+                </padding>
+                <HBox alignment="CENTER_LEFT" spacing="0">
+                  <Label text="任务" styleClass="history-cap"/>
+                  <Label text=" · " styleClass="history-sep"/>
+                  <Label fx:id="historyCountLabel" text="00" styleClass="history-count"/>
+                  <Label text=" 条" styleClass="history-sub"/>
+                  <Region HBox.hgrow="ALWAYS"/>
+                  <Button text="题干" focusTraversable="false" onAction="#onViewJobConcept"
+                          styleClass="button,btn-zen-ghost"/>
+                  <Button text="复制" focusTraversable="false" onAction="#onCopyJobConcept"
+                          styleClass="button,btn-zen-ghost"/>
+                  <Button text="删除" focusTraversable="false" onAction="#onDeleteJob"
+                          styleClass="button,btn-zen-danger"/>
+                </HBox>
+                <ListView fx:id="jobList" minHeight="112" prefHeight="160"/>
+              </VBox>
+            </bottom>
+          </BorderPane>
+        </SplitPane>
+      </Tab>
+      <Tab fx:id="geogebraTab" text="GeoGebra">
+        <SplitPane dividerPositions="0.36" styleClass="zen-split" orientation="HORIZONTAL">
+          <VBox minWidth="260" prefWidth="400" spacing="10" styleClass="studio-left">
+            <padding>
+              <Insets bottom="14" left="14" right="14" top="14"/>
+            </padding>
+            <Label styleClass="zen-section-title" text="题目 → GeoGebra"/>
+            <Label styleClass="zen-hint" wrapText="true"
+                   text="一句话描述几何/函数题，或上传题目图。题目图需要「设置」中的模型支持多模态（视觉），如纯文本模型则只能根据文字生成。右侧需联网加载 GeoGebra；API 与「设置」一致。"/>
+            <Label styleClass="edu-field-label" text="文字描述"/>
+            <TextArea fx:id="geogebraProblemInput" prefRowCount="4" wrapText="true" minHeight="100"
+                      promptText="例如：构造 △ABC，AB=5，BC=6，AC=7，并标出三边。"
+                      styleClass="zen-input"/>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+              <Button fx:id="geogebraPickImageButton" text="上传题目图…" onAction="#onGeogebraPickImage"
+                      styleClass="button,btn-zen-outline"/>
+              <Button text="清除图片" onAction="#onGeogebraClearImage" styleClass="button,btn-zen-ghost"/>
+            </HBox>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+              <CheckBox fx:id="geogebraEnable3dCheck" text="三维模式（依赖 WebGL；右侧空白请先取消并点「重新加载画布」）"
+                        styleClass="zen-check" wrapText="true"/>
+              <Button text="重新加载画布" onAction="#onGeogebraReloadHost" styleClass="button,btn-zen-outline"/>
+            </HBox>
+            <Label fx:id="geogebraImageStatusLabel" styleClass="zen-hint" wrapText="true"/>
+            <Button fx:id="geogebraGenerateButton" maxWidth="Infinity" text="AI 生成并作图"
+                    onAction="#onGeogebraGenerate" styleClass="button,btn-zen-hero"/>
+            <Label styleClass="zen-micro-heading" text="代数指令（每行一条；# 开头的行为说明）"/>
+            <TextArea fx:id="geogebraCommandsArea" prefRowCount="10" wrapText="true" VBox.vgrow="ALWAYS" minHeight="120"
+                      promptText="生成后显示指令；可在文本框中修改后再点「重新应用」。" styleClass="code-editor"/>
+            <HBox spacing="8" alignment="CENTER_LEFT">
+              <Button text="复制指令" onAction="#onGeogebraCopyCommands" styleClass="button,btn-zen-soft"/>
+              <Button text="重新应用" onAction="#onGeogebraReapplyCommands" styleClass="button,btn-zen-outline"/>
+            </HBox>
+          </VBox>
+          <BorderPane minWidth="380" styleClass="output-pane">
+            <center>
+              <WebView fx:id="geogebraWebView" minWidth="320" minHeight="400" prefWidth="640" prefHeight="520"/>
+            </center>
+          </BorderPane>
+        </SplitPane>
+      </Tab>
+      <Tab text="设置">
+        <ScrollPane fitToWidth="true" styleClass="settings-scroll" hbarPolicy="NEVER">
+          <VBox spacing="0">
+            <padding>
+              <Insets bottom="28" left="28" right="28" top="24"/>
+            </padding>
+            <VBox styleClass="zen-section,zen-section-wide" spacing="12" maxWidth="720">
+              <HBox alignment="CENTER_LEFT">
+                <Label text="API 与本地环境" styleClass="zen-section-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="覆盖配置文件" styleClass="zen-section-tag"/>
+              </HBox>
+              <Label text="覆盖 application.yml 中的 mathanim.ai；留空则使用配置文件。" styleClass="zen-hint" wrapText="true"/>
+              <Label text="API：任意 OpenAI 兼容端点即可（官方 / Azure / DeepSeek / 本地兼容服务），仅换 Base URL、Key、Model，不改流水线逻辑。默认 yml 为 DeepSeek：base-url 以 /v1 结尾、model 用 deepseek-chat。详见 classpath prompts/PIPELINE.md。" styleClass="zen-hint" wrapText="true"/>
+              <Label text="提示词角色：在「创作 → 高级」用 JSON 覆盖 problemFraming · conceptDesigner · codeGeneration · codeRetry，与多阶段 Agent handoff 一一对应。" styleClass="zen-hint" wrapText="true"/>
+              <GridPane hgap="14" vgap="14">
+                <columnConstraints>
+                  <ColumnConstraints minWidth="120" prefWidth="128" hgrow="NEVER"/>
+                  <ColumnConstraints hgrow="ALWAYS" minWidth="240"/>
+                </columnConstraints>
+                <Label text="Base URL" styleClass="zen-form-label" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <TextField fx:id="settingsBaseUrl" GridPane.columnIndex="1" GridPane.rowIndex="0" maxWidth="Infinity"/>
+                <Label text="API Key" styleClass="zen-form-label" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <PasswordField fx:id="settingsApiKey" GridPane.columnIndex="1" GridPane.rowIndex="1" maxWidth="Infinity"/>
+                <Label text="Model" styleClass="zen-form-label" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                <TextField fx:id="settingsModel" GridPane.columnIndex="1" GridPane.rowIndex="2" maxWidth="Infinity"/>
+                <Label text="修补轮次" styleClass="zen-form-label" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                <TextField fx:id="settingsMaxRetry" GridPane.columnIndex="1" GridPane.rowIndex="3" prefWidth="100" maxWidth="140" promptText="空 = yml"/>
+                <Label text="Python" styleClass="zen-form-label" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+                <TextField fx:id="settingsPython" GridPane.columnIndex="1" GridPane.rowIndex="4" maxWidth="Infinity"
+                           promptText="与 Manim 同环境"/>
+              </GridPane>
+              <HBox spacing="12" alignment="CENTER_LEFT">
+                <Button text="保存" onAction="#onSaveSettings" styleClass="button,btn-zen-primary"/>
+                <Button text="重新加载" onAction="#onReloadSettings" styleClass="button,btn-zen-outline"/>
+                <Button fx:id="settingsTestAiButton" text="测试连接" onAction="#onTestAiConnection" styleClass="button,btn-zen-outline"/>
+              </HBox>
+            </VBox>
+          </VBox>
+        </ScrollPane>
+      </Tab>
+    </TabPane>
+    </center>
+  </BorderPane>
+  <Region fx:id="resizeEdgeLeft" maxWidth="4.0" minWidth="4.0" prefWidth="4.0"
+          styleClass="window-resize-edge" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+          AnchorPane.topAnchor="0.0"/>
+  <Region fx:id="resizeEdgeRight" maxWidth="4.0" minWidth="4.0" prefWidth="4.0"
+          styleClass="window-resize-edge" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0"
+          AnchorPane.topAnchor="40.0"/>
+  <Region fx:id="resizeEdgeBottom" maxHeight="4.0" minHeight="4.0" prefHeight="4.0"
+          styleClass="window-resize-edge" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+          AnchorPane.rightAnchor="0.0"/>
+  <Region fx:id="resizeCornerBL" maxHeight="4.0" maxWidth="4.0" minHeight="4.0" minWidth="4.0"
+          prefHeight="4.0" prefWidth="4.0" styleClass="window-resize-edge"
+          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"/>
+  <Region fx:id="resizeGrip" maxHeight="14.0" maxWidth="14.0" minHeight="14.0" minWidth="14.0"
+          prefHeight="14.0" prefWidth="14.0" styleClass="window-resize-grip"
+          AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0"/>
+</AnchorPane>

@@ -1,0 +1,18 @@
+【硬性约束】
+- 类名：class GeneratedScene(Scene)，第一行 from manim import *。
+- 坐标轴：Axes(..., axis_config={"include_numbers": False})；刻度与简短标签用 Text，尽量少用 MathTex；必要公式可保留少量 MathTex。
+- 颜色插值：interpolate_color(ManimColor("#..."), ManimColor("#..."), t)，勿直接传 "#..." 字符串。
+- 场景图：任何 Mobject 一旦 Create 进场景，未 Remove/FadeOut 前禁止对同一实例再次 Create。ReplacementTransform(A, B) 后若下一镜仍需坐标轴，应 Axes(...) 新建再 Create。
+- 禁止 self.play(..., run_time=0)。
+
+【算力与时长】
+- 部分和 S_n：用 numpy 向量化或预计算曲线数据，禁止在 always_redraw 里对大量 x 做纯 Python 双重循环求和。
+- n 的变化：不要求真实从 1 连续扫到 100；可用 ValueTracker 分段（如 1→20 再 20→100）或关键帧 {1,5,10,50,100}；控制总 run_time。
+- 吉布斯特写：单独一套 Axes（x 在 0 附近窄范围），黄色 Dot 标峰值；水平虚线高度约 1.089，用 DashedLine + Text。
+- 总结镜：方波 + 固定 n=50（或 100）的部分和 + 三条中文结论 Text 分行 arrange(DOWN)。
+
+【交互】
+- 「滑块」用线段 + 动点 + Text 显示 n 即可，不要求鼠标拖拽。
+
+【验收】
+- py_compile 通过；在 timeout-seconds 内完成渲染即可。

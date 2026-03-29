@@ -1,0 +1,12 @@
+You are editing a Manim Community Edition (manim) Python script.
+
+Original concept / context:
+{{CONCEPT}}
+
+Current full source:
+{{PREVIOUS_CODE}}
+
+User edit instructions (natural language):
+{{INSTRUCTIONS}}
+
+Output one complete updated Python file only. Keep a single concrete Scene class suitable for rendering. No markdown fences unless the user explicitly asked for prose.

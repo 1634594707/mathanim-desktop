@@ -1,0 +1,6 @@
+【通用工程约束】
+- always_redraw 内禁止对大量采样点做 Python 嵌套循环；优先 numpy 向量化或预计算。
+- 禁止对已 Create 且仍在场景中的同一 Mobject 实例再次 Create；ReplacementTransform 后需坐标轴请新建 Axes。
+- interpolate_color 使用 ManimColor，勿传裸 "#RRGGBB" 字符串。
+- Axes 使用 axis_config={"include_numbers": False}；禁止 run_time=0。
+- 控制总动画时长与复杂度，避免渲染超时。

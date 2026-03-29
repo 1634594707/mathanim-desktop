@@ -1,0 +1,22 @@
+/target/
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE / OS
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs / local
+*.log
+*.tmp
+
+# Python / local data
+__pycache__/
+*.pyc
+.mathanim/
+*.db
+
+# Large example renders (optional: remove this line to track)
+examples/manim/ai-reference/output/

@@ -1,0 +1,17 @@
+{
+  "description": "与 mathanim-desktop example-bank.json 对应；类名均为 GeneratedScene。Math-To-Manim 风格：分镜清晰、少依赖 LaTeX、可渲染优先。",
+  "renderFromRepoRoot": "python -m manim render examples/manim/<file> GeneratedScene -qm --fps 30",
+  "referenceFrames": "见 examples/manim/render_reference_frames.ps1（导出最后一帧 PNG 供 AI 对齐）",
+  "examples": [
+    { "id": "triple-lecture-1", "file": "triple_lecture_1.py", "title": "[高数] 第一卦限内三重积分（直角坐标）" },
+    { "id": "triple-lecture-2", "file": "triple_lecture_2.py", "title": "[高数] 柱坐标下的三重积分" },
+    { "id": "triple-direct-1", "file": "triple_direct_1.py", "title": "[高数] 球坐标与体积元（直接描述）" },
+    { "id": "calc-lecture-1", "file": "calc_secant_tangent_1.py", "title": "[高数] 导数几何：割线到切线" },
+    { "id": "la-lecture-1", "file": "la_projection_1.py", "title": "[线代] 向量投影（2D）" },
+    { "id": "la-matrix-grid-1", "file": "la_matrix_grid_1.py", "title": "[线代] 矩阵作用于平面网格（剪切，对齐 OpeningManimExample）" },
+    { "id": "mech-lecture-1", "file": "mech_lecture_1.py", "title": "[力学] 斜面滑块（受力与数值）" },
+    { "id": "mech-lecture-2", "file": "mech_lecture_2.py", "title": "[力学] 连接体与轻绳（受力与数值）" },
+    { "id": "mech-circular-1", "file": "mech_direct_1.py", "title": "[力学] 水平面匀速圆周（向心力）" },
+    { "id": "mech-direct-1", "file": "mech_projectile_1.py", "title": "[力学] 平抛与速度分解（直接描述）" }
+  ]
+}

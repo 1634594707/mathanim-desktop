@@ -1,0 +1,4 @@
+# Matplotlib 动画示例（triple_integral_matplotlib_anim.py）
+matplotlib>=3.7
+numpy>=1.24
+imageio-ffmpeg>=0.4

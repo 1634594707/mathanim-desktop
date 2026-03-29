@@ -1,0 +1,135 @@
+{
+  "examples": [
+    {
+      "id": "triple-lecture-1",
+      "manimExamplePath": "examples/manim/triple_lecture_1.py",
+      "title": "[高数] 第一卦限内三重积分（直角坐标）",
+      "inputMode": "TUTOR_WITH_SOLUTION",
+      "problem": "设 V 为第一卦限内由平面 x+y+z=1 与三个坐标面围成的四面体，计算 ∫∫∫_V x dV。",
+      "solution": "1）画出四面体，标出顶点 (1,0,0)、(0,1,0)、(0,0,1)。\n2）投影到 xy 平面得三角形 x≥0,y≥0,x+y≤1；先对 z 积分：0≤z≤1−x−y。\n3）再对 y：0≤y≤1−x；对 x：0≤x≤1。\n4）写出累次积分并逐步计算。",
+      "answer": "1/24（请与你的演算核对）。"
+    },
+    {
+      "id": "triple-lecture-2",
+      "manimExamplePath": "examples/manim/triple_lecture_2.py",
+      "title": "[高数] 柱坐标下的三重积分",
+      "inputMode": "TUTOR_WITH_SOLUTION",
+      "problem": "求圆柱体 x²+y²≤R²，0≤z≤h 上 ∫∫∫_V z·(x²+y²) dV（R、h 为已知正数）。",
+      "solution": "1）说明采用柱坐标 (r,θ,z) 较自然。\n2）写出体积元 dV=r dr dθ dz 与积分上下限。\n3）利用对称性化简对 θ 的积分。\n4）逐步算出定积分。",
+      "answer": "用含 R、h 的式子表示（课堂可代入具体数字演示）。"
+    },
+    {
+      "id": "triple-direct-1",
+      "manimExamplePath": "examples/manim/triple_direct_1.py",
+      "title": "[高数] 球坐标与体积元（直接描述）",
+      "inputMode": "DIRECT_PROMPT",
+      "directPrompt": "请用 Manim 做一个面向高中或大一学生的短片：展示球坐标 (r,θ,φ) 与直角坐标的关系；画一个小球壳说明体积元近似为 r² sinφ dr dφ dθ；用 Text 标注，尽量避免 MathTex；节奏慢一些，每步停留 2～3 秒。"
+    },
+    {
+      "id": "calc-lecture-1",
+      "manimExamplePath": "examples/manim/calc_secant_tangent_1.py",
+      "title": "[高数] 导数几何：割线到切线",
+      "inputMode": "TUTOR_WITH_SOLUTION",
+      "problem": "设 f(x)=x²，在 x=a 处用割线斜率解释导数 f'(a) 的几何意义。",
+      "solution": "1）在抛物线上取定点 (a,a²) 与动点 (x,x²)。\n2）令 x→a，观察割线趋近于切线。\n3）切线斜率为 lim (x²−a²)/(x−a)=2a。",
+      "answer": "f'(a)=2a；动画中可用一条动割线逼近切线来呈现。"
+    },
+    {
+      "id": "la-lecture-1",
+      "manimExamplePath": "examples/manim/la_projection_1.py",
+      "title": "[线代] 向量投影（2D）",
+      "inputMode": "TUTOR_WITH_SOLUTION",
+      "problem": "给定平面向量 v 与 x 轴正方向单位向量 î，说明 v 在 î 上的投影向量及其长度含义。",
+      "solution": "1）投影公式 proj_u(v)=(v·u)u，|u|=1。\n2）在图上画出 v、沿 x 轴的分量（投影）以及垂直于轴的分量（虚线）。\n3）强调正交分解与勾股关系。",
+      "answer": "投影长度为 |v| cos θ（θ 为 v 与 x 轴夹角），在直角坐标下等于 v 的 x 分量。"
+    },
+    {
+      "id": "la-matrix-grid-1",
+      "manimExamplePath": "examples/manim/la_matrix_grid_1.py",
+      "title": "[线代] 矩阵作用于平面网格（剪切）",
+      "inputMode": "TUTOR_WITH_SOLUTION",
+      "problem": "设 A=[[1,1],[0,1]]。说明 A 作为平面线性变换时，对标准坐标网格产生何种几何效果，并求 det A。",
+      "solution": "1）画 NumberPlane 表示未变换前的平面。\n2）对网格（或基向量端点）施加 A：列向量满足 Ae₁=e₁，Ae₂=e₁+e₂，故为沿 x 方向的剪切。\n3）det A=1，面积不变。",
+      "answer": "剪切变换；det A = 1（与参考动画一致）。"
+    },
+    {
+      "id": "mech-lecture-1",
+      "manimExamplePath": "examples/manim/mech_lecture_1.py",
+      "title": "[力学] 斜面滑块（受力分析）",
+      "inputMode": "TUTOR_WITH_SOLUTION",
+      "problem": "质量为 m 的物块放在倾角为 θ 的固定斜面上，静摩擦因数为 μ。求物块保持静止时 μ 需满足的条件。",
+      "solution": "1）取物块为研究对象，画受力图：重力、法向支持力、静摩擦力（沿斜面向上或向下需讨论趋势，此处给朝上）。\n2）沿斜面与垂直斜面建系列平衡方程。\n3）利用 f≤μN 得到 μ 的不等式。",
+      "answer": "μ ≥ tan θ（与题设方向一致时请自洽核对）。"
+    },
+    {
+      "id": "mech-lecture-2",
+      "manimExamplePath": "examples/manim/mech_lecture_2.py",
+      "title": "[力学] 连接体与轻绳（示意）",
+      "inputMode": "TUTOR_WITH_SOLUTION",
+      "problem": "水平桌面两物块 m₁、m₂ 用轻绳连接，m₁ 受水平拉力 F，桌面与 m₂ 之间光滑、m₁ 与桌面有摩擦。求两物块加速度及绳中张力（用已知量表示）。",
+      "solution": "1）分别隔离 m₁、m₂ 画受力图，标明张力方向一致。\n2）对整体与隔离体列牛顿第二定律。\n3）联立求解 a 与 T，并说明假设绳不可伸长带来的约束。",
+      "answer": "用 m₁、m₂、F 与摩擦因数写出 a、T（课堂可代入一组数验证量纲）。"
+    },
+    {
+      "id": "mech-circular-1",
+      "manimExamplePath": "examples/manim/mech_direct_1.py",
+      "title": "[力学] 水平面匀速圆周（向心力与摩擦）",
+      "inputMode": "TUTOR_WITH_SOLUTION",
+      "problem": "质量为 m 的物块在水平面上做半径为 r 的匀速圆周运动，角速度为 ω，向心力由静摩擦力提供。求所需静摩擦力大小（未打滑时）。",
+      "solution": "1）俯视图：指向圆心的向心力 Fₙ=mω²r。\n2）由静摩擦提供：fₛ=mω²r≤μₛN；水平面 N=mg。\n3）动画中应标出 r、ω 与力的方向。",
+      "answer": "fₛ = mω²r；与参考脚本中代入数值一致时可核对。"
+    },
+    {
+      "id": "mech-direct-1",
+      "manimExamplePath": "examples/manim/mech_projectile_1.py",
+      "title": "[力学] 平抛轨迹与速度分解（直接描述）",
+      "inputMode": "DIRECT_PROMPT",
+      "directPrompt": "用 Manim 演示平抛运动：画出初速度水平、重力竖直向下；分镜展示水平匀速与竖直匀加速；在轨迹上标出某一时刻的速度矢量及其水平、竖直分量；可代入一组具体 v₀、g 标在图上；配色清晰，适合课堂投影。"
+    },
+    {
+      "id": "physics-multipendulum-1",
+      "manimExamplePath": "examples/manim/physics_multipendulum_1.py",
+      "title": "[物理·manim-physics] 双摆与末端轨迹",
+      "inputMode": "TUTOR_WITH_SOLUTION",
+      "problem": "简述双摆（两个质点、两段轻杆）为何对初值敏感，并说明参考脚本中如何用刚体仿真与轨迹线呈现“混沌”观感。",
+      "solution": "1）写出自由度与势能；小角度近似下单摆可解，双摆一般无解析解，初值微小差异会放大。\n2）manim-physics 用 pymunk 对摆球作刚体积分，MultiPendulum 启动摆动后末端轨迹用 TracedPath 叠加。\n3）课堂可强调：不是随机，而是确定性混沌。",
+      "answer": "双摆为非线性耦合系统，长期行为对初值敏感；动画上末端轨迹不复现简单周期，呈复杂缠绕（与参考脚本一致即可）。"
+    },
+    {
+      "id": "physics-electric-field-1",
+      "manimExamplePath": "examples/manim/physics_electric_field_1.py",
+      "title": "[物理·manim-physics] 点电荷电场叠加",
+      "inputMode": "TUTOR_WITH_SOLUTION",
+      "problem": "空间有三个点电荷，电量分别为 q₁、q₂、q₃（符号与数值见参考脚本中的 Charge 参数）。说明任一点电场强度 E 的叠加原理，并指出电场线疏密与场强大小的关系。",
+      "solution": "1）库仑定律给出每个点电荷产生的场，矢量叠加 E=ΣEᵢ。\n2）同号相斥、异号相吸的几何图像。\n3）电场线密度大处 |E| 大（定性）。",
+      "answer": "叠加原理：E 为各点电荷产生电场的矢量和；电场线越密处场强越大（定性描述即可）。"
+    },
+    {
+      "id": "physics-magnetic-field-1",
+      "manimExamplePath": "examples/manim/physics_magnetic_field_1.py",
+      "title": "[物理·manim-physics] 载流线圈与磁感线（3D）",
+      "inputMode": "TUTOR_WITH_SOLUTION",
+      "problem": "载流导线在空间产生磁场。参考脚本用圆形 Wire 表示电流回路，请说明安培右手定则如何判定磁感线绕向，以及两个回路并排时磁场的几何特征（定性）。",
+      "solution": "1）右手握住导线/回路，四指为电流方向，拇指为内部 B 的大致方向（对圆电流）。\n2）MagneticField 可视化磁感线；两回路轴平行时，中间区域可出现相消或加强（取决于电流方向）。\n3）与参考脚本中两圆电流位置对应观察。",
+      "answer": "用右手定则判定 B 的绕向；两回路磁场矢量叠加，中间区域可出现减弱或增强（需结合电流方向具体分析）。"
+    },
+    {
+      "id": "physics-lens-rays-1",
+      "manimExamplePath": "examples/manim/physics_lens_rays_1.py",
+      "title": "[物理·manim-physics] 薄透镜与光线折射",
+      "inputMode": "TUTOR_WITH_SOLUTION",
+      "problem": "一束平行光入射到两个薄透镜上（参数见 Lens 的构造）。定性说明光线经透镜后偏折的原因（折射），以及会聚/发散与透镜两侧曲率、折射率的关系（课堂可只讲定性）。",
+      "solution": "1）光在界面满足折射定律（斯涅尔定律）。\n2）薄透镜使不同高度入射的平行光会聚或发散到近似一点（理想近似）。\n3）参考脚本中 Ray 经 propagate 穿过透镜链，展示偏折路径。",
+      "answer": "折射导致方向改变；薄透镜在傍轴近似下可把平行光会聚/发散（与透镜类型及焦距符号一致即可）。"
+    },
+    {
+      "id": "physics-standing-waves-1",
+      "manimExamplePath": "examples/manim/physics_standing_waves_1.py",
+      "title": "[物理·manim-physics] 弦上驻波（低阶模态）",
+      "inputMode": "TUTOR_WITH_SOLUTION",
+      "problem": "两端固定的弦，长度为 L。说明驻波条件与允许波长 λₙ 的关系，并解释 n=1,2,3,4 时波腹、波节数目如何随 n 变化。",
+      "solution": "1）边界条件：两端为波节 ⇒ L=n·λₙ/2。\n2）频率 fₙ∝n（在相同波速下）。\n3）n 越大，半波数目越多，波腹数为 n。",
+      "answer": "λₙ=2L/n；第 n 模有 n 个波腹、n+1 个波节（含两端）。"
+    }
+  ]
+}
