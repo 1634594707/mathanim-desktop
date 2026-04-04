@@ -73,6 +73,9 @@ public class RenderJobService {
       job.setStatus(JobStatus.FAILED);
       job.setProcessingStage(ProcessingStage.NONE);
       job.setErrorMessage(RenderJob.INTERRUPTED_MESSAGE);
+      job.setFailureSummary("任务在上次运行中被中断");
+      job.setFailureRepairHint("重新执行该任务，必要时先检查环境、Manim 和 Python 配置。");
+      job.setFallbackModeActive(false);
       renderJobRepository.save(job);
       manimProcessRegistry.destroy(job.getId());
       n++;
@@ -92,13 +95,14 @@ public class RenderJobService {
         null,
         "zh-CN",
         null,
+        true,
         true);
   }
 
   @Transactional
   public RenderJob enqueue(String concept, OutputMode outputMode, VideoQuality videoQuality) {
     return enqueue(
-        concept, outputMode, videoQuality, false, true, null, null, "zh-CN", null, true);
+        concept, outputMode, videoQuality, false, true, null, null, "zh-CN", null, true, true);
   }
 
   @Transactional
@@ -112,7 +116,8 @@ public class RenderJobService {
       String referenceImagesJson,
       String promptLocale,
       String promptOverridesJson,
-      boolean reliableGeneration) {
+      boolean reliableGeneration,
+      boolean allowFallbackMode) {
     RenderJob job = new RenderJob();
     job.setConcept(concept);
     job.setOutputMode(outputMode);
@@ -122,6 +127,7 @@ public class RenderJobService {
     job.setUseProblemFraming(useProblemFraming);
     job.setUseTwoStageAi(useTwoStageAi);
     job.setReliableGeneration(reliableGeneration);
+    job.setAllowFallbackMode(allowFallbackMode);
     job.setProblemPlanJson(problemPlanJson);
     job.setReferenceImagesJson(referenceImagesJson);
     job.setPromptLocale(promptLocale != null ? promptLocale : "zh-CN");
@@ -137,7 +143,8 @@ public class RenderJobService {
       String editInstructions,
       OutputMode outputMode,
       VideoQuality videoQuality,
-      boolean reliableGeneration) {
+      boolean reliableGeneration,
+      boolean allowFallbackMode) {
     RenderJob job = new RenderJob();
     job.setConcept(concept);
     job.setSourceCode(sourceCode);
@@ -147,6 +154,7 @@ public class RenderJobService {
     job.setJobKind(JobKind.MODIFY);
     job.setStatus(JobStatus.QUEUED);
     job.setReliableGeneration(reliableGeneration);
+    job.setAllowFallbackMode(allowFallbackMode);
     return renderJobRepository.save(job);
   }
 
@@ -162,6 +170,9 @@ public class RenderJobService {
     job.setStatus(JobStatus.FAILED);
     job.setProcessingStage(ProcessingStage.NONE);
     job.setErrorMessage(RenderJob.USER_CANCELLED_MESSAGE);
+    job.setFailureSummary("用户已取消任务");
+    job.setFailureRepairHint("如需继续，可重新执行该任务。");
+    job.setFallbackModeActive(false);
     renderJobRepository.save(job);
     manimProcessRegistry.destroy(jobId);
   }
@@ -315,6 +326,61 @@ public class RenderJobService {
         });
   }
 
+  @Transactional
+  public RenderJob retryJob(UUID sourceJobId, boolean forceFallbackMode) {
+    RenderJob source =
+        renderJobRepository
+            .findById(sourceJobId)
+            .orElseThrow(() -> new IllegalArgumentException("任务不存在: " + sourceJobId));
+
+    RenderJob job = new RenderJob();
+    job.setConcept(source.getConcept());
+    job.setOutputMode(source.getOutputMode());
+    job.setVideoQuality(source.getVideoQuality());
+    job.setJobKind(source.getJobKind());
+    job.setUseProblemFraming(source.isUseProblemFraming());
+    job.setUseTwoStageAi(source.isUseTwoStageAi());
+    job.setReliableGeneration(source.isReliableGeneration());
+    job.setAllowFallbackMode(forceFallbackMode || source.isAllowFallbackMode());
+    job.setForceFallbackMode(forceFallbackMode);
+    job.setProblemPlanJson(source.getProblemPlanJson());
+    job.setReferenceImagesJson(source.getReferenceImagesJson());
+    job.setPromptLocale(source.getPromptLocale());
+    job.setPromptOverridesJson(source.getPromptOverridesJson());
+    job.setSourceCode(source.getSourceCode());
+    job.setEditInstructions(source.getEditInstructions());
+    job.setStatus(JobStatus.QUEUED);
+    job.setProcessingStage(ProcessingStage.NONE);
+    job.setErrorMessage(null);
+    job.setFailureSummary(null);
+    job.setFailureRepairHint(null);
+    job.setFallbackModeActive(forceFallbackMode);
+    job.setOutputMediaPath(null);
+    job.setScriptPath(null);
+    return renderJobRepository.save(job);
+  }
+
+  public void retryJobAsync(
+      UUID sourceJobId,
+      boolean forceFallbackMode,
+      Consumer<String> log,
+      Consumer<RenderJob> onCreated,
+      Runnable onComplete) {
+    manimExecutorService.execute(
+        () -> {
+          try {
+            RenderJob retried = retryJob(sourceJobId, forceFallbackMode);
+            log.accept(
+                (forceFallbackMode ? "已创建保底重试任务: " : "已创建重试任务: ") + retried.getId());
+            onCreated.accept(retried);
+          } catch (RuntimeException e) {
+            log.accept("重试创建失败: " + e.getMessage());
+          } finally {
+            onComplete.run();
+          }
+        });
+  }
+
   private void runBuiltinTestSync(UUID jobId, Consumer<String> log) {
     RenderJob job =
         renderJobRepository
@@ -324,6 +390,9 @@ public class RenderJobService {
     job.setStatus(JobStatus.PROCESSING);
     job.setProcessingStage(ProcessingStage.RENDERING);
     job.setErrorMessage(null);
+    job.setFailureSummary(null);
+    job.setFailureRepairHint(null);
+    job.setFallbackModeActive(false);
     job.setOutputMediaPath(null);
     renderJobRepository.save(job);
     log.accept("任务 " + jobId + " 已进入 PROCESSING，开始渲染内置场景…");
@@ -336,11 +405,15 @@ public class RenderJobService {
       job.setProcessingStage(ProcessingStage.NONE);
       job.setOutputMediaPath(r.message());
       job.setErrorMessage(null);
+      job.setFailureSummary(null);
+      job.setFailureRepairHint(null);
       log.accept("完成，输出: " + r.message());
     } else {
       job.setStatus(JobStatus.FAILED);
       job.setProcessingStage(ProcessingStage.NONE);
       job.setErrorMessage(trim(r.message() + "\n" + r.stdout(), 4000));
+      job.setFailureSummary("内置测试渲染失败");
+      job.setFailureRepairHint("优先检查 Manim、Python、字体或本地渲染依赖是否正常。");
       log.accept("失败: " + r.message());
       if (!r.stdout().isBlank()) {
         log.accept(trim(r.stdout(), 6000));

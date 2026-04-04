@@ -27,6 +27,7 @@ import javafx.concurrent.Worker;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -56,6 +57,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.Scene;
+import javafx.scene.control.Labeled;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -82,8 +84,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -121,6 +125,7 @@ public class MainViewController implements Initializable {
   @FXML private CheckBox useProblemFramingCheck;
   @FXML private CheckBox useTwoStageCheck;
   @FXML private CheckBox reliableGenerationCheck;
+  @FXML private CheckBox allowFallbackModeCheck;
   @FXML private Button oneClickGenerateButton;
   @FXML private TextArea referenceUrlsInput;
   @FXML private TextArea promptOverridesJsonInput;
@@ -130,6 +135,7 @@ public class MainViewController implements Initializable {
 
   @FXML private Label studioStatusLabel;
   @FXML private Label outputStatusLabel;
+  @FXML private Label outputFallbackBadgeLabel;
   @FXML private Label historyCountLabel;
 
   @FXML private StackPane outputPreviewStack;
@@ -143,6 +149,12 @@ public class MainViewController implements Initializable {
   @FXML private Slider outputPreviewSeek;
   @FXML private Label outputPreviewTimeLabel;
   @FXML private Button outputPreviewPlayToggle;
+  @FXML private VBox outputFailureCard;
+  @FXML private Label outputFailureMetaLabel;
+  @FXML private Label outputFailureSummaryLabel;
+  @FXML private TextArea outputLogArea;
+  private Button retrySelectedButton;
+  private Button retryFallbackButton;
 
   private Stage outputFullscreenStage;
   private MediaView outputFullscreenMediaView;
@@ -196,6 +208,8 @@ public class MainViewController implements Initializable {
   private double resizeStartScreenX;
   private double resizeStartScreenY;
   private double resizeStartWinX;
+  private final Map<UUID, StringBuilder> jobLogBuffers = new LinkedHashMap<>();
+  private final StringBuilder sessionLogBuffer = new StringBuilder();
 
   public MainViewController(
       RenderJobService renderJobService,
@@ -265,6 +279,9 @@ public class MainViewController implements Initializable {
     if (reliableGenerationCheck != null) {
       reliableGenerationCheck.setSelected(true);
     }
+    if (allowFallbackModeCheck != null) {
+      allowFallbackModeCheck.setSelected(true);
+    }
 
     if (oneClickGenerateButton != null) {
       Tooltip tip = new Tooltip("与 Ctrl+Enter 相同：入队并开始 AI + Manim 渲染");
@@ -278,6 +295,8 @@ public class MainViewController implements Initializable {
       testTip.setShowDelay(Duration.millis(350));
       settingsTestAiButton.setTooltip(testTip);
     }
+
+    applyRuntimeCopy();
 
     if (exampleCombo != null) {
       exampleCombo.setItems(
@@ -360,6 +379,7 @@ public class MainViewController implements Initializable {
           .addListener((obs, was, now) -> updateCreationModeVisibility());
     }
     updateCreationModeVisibility();
+    installHistoryRetryActions();
 
     jobList.setCellFactory(
         lv ->
@@ -370,8 +390,18 @@ public class MainViewController implements Initializable {
                 if (empty || item == null) {
                   setText(null);
                   setTooltip(null);
+                  getStyleClass().remove("job-cell-fallback");
+                  getStyleClass().remove("job-cell-failed");
                 } else {
-                  String st = shortStatus(item.getStatus());
+                  getStyleClass().remove("job-cell-fallback");
+                  getStyleClass().remove("job-cell-failed");
+                  if (item.isFallbackModeActive()) {
+                    getStyleClass().add("job-cell-fallback");
+                  }
+                  if (item.getStatus() == JobStatus.FAILED) {
+                    getStyleClass().add("job-cell-failed");
+                  }
+                  String st = displayJobState(item);
                   String line = st;
                   if (item.getProcessingStage() != null && item.getProcessingStage() != ProcessingStage.NONE) {
                     line += " · " + item.getProcessingStage();
@@ -382,14 +412,35 @@ public class MainViewController implements Initializable {
                           + "/"
                           + item.getVideoQuality()
                           + (item.getJobKind() == JobKind.MODIFY ? " · 改" : "");
+                  if (item.isFallbackModeActive()) {
+                    line += " 路 保底";
+                  }
                   line += "\n" + truncate(item.getConcept(), 68);
+                  if (item.getFailureSummary() != null && !item.getFailureSummary().isBlank()) {
+                    line += "\n  ! " + truncate(item.getFailureSummary(), 56);
+                  }
                   if (item.getOutputMediaPath() != null && !item.getOutputMediaPath().isBlank()) {
                     line += "\n  " + truncate(item.getOutputMediaPath(), 88);
                   }
                   setText(line);
-                  String full = item.getConcept();
-                  if (full != null && !full.isBlank()) {
-                    Tooltip tt = new Tooltip(full);
+                  StringBuilder full = new StringBuilder();
+                  if (item.getConcept() != null && !item.getConcept().isBlank()) {
+                    full.append(item.getConcept().strip());
+                  }
+                  if (item.getFailureSummary() != null && !item.getFailureSummary().isBlank()) {
+                    if (full.length() > 0) {
+                      full.append("\n\n");
+                    }
+                    full.append("失败诊断：").append(item.getFailureSummary().strip());
+                  }
+                  if (item.getFailureRepairHint() != null && !item.getFailureRepairHint().isBlank()) {
+                    if (full.length() > 0) {
+                      full.append("\n");
+                    }
+                    full.append("修补建议：").append(item.getFailureRepairHint().strip());
+                  }
+                  if (full.length() > 0) {
+                    Tooltip tt = new Tooltip(full.toString());
                     tt.setWrapText(true);
                     tt.setMaxWidth(420);
                     setTooltip(tt);
@@ -405,11 +456,22 @@ public class MainViewController implements Initializable {
         .addListener(
             (obs, oldV, job) -> {
               if (job == null) {
-                Platform.runLater(() -> updateOutputPreview(null));
+                Platform.runLater(
+                    () -> {
+                      updateOutputPreview(null);
+                      refreshOutputLog(null);
+                      updateFallbackBadge(false);
+                      updateOutputStatusTooltip(null);
+                      updateFailureSummaryCard(null);
+                    });
                 return;
               }
               Platform.runLater(() -> fillFromJob(job));
             });
+    jobList
+        .getSelectionModel()
+        .selectedItemProperty()
+        .addListener((obs, oldV, job) -> Platform.runLater(this::updateRetryButtons));
 
     if (outputPreviewStack != null && outputMediaView != null) {
       StackPane.setAlignment(outputMediaView, Pos.CENTER);
@@ -730,7 +792,14 @@ public class MainViewController implements Initializable {
     if (reliableGenerationCheck != null) {
       reliableGenerationCheck.setSelected(job.isReliableGeneration());
     }
+    if (allowFallbackModeCheck != null) {
+      allowFallbackModeCheck.setSelected(job.isAllowFallbackMode());
+    }
+    updateFallbackBadge(job.isFallbackModeActive());
+    updateOutputStatusTooltip(job);
+    updateFailureSummaryCard(job);
     updateOutputPreview(job);
+    refreshOutputLog(job);
   }
 
   private void disposeOutputMedia() {
@@ -1211,12 +1280,13 @@ public class MainViewController implements Initializable {
     buildAndEnqueue()
         .ifPresent(
             job -> {
-              appendLog("--- 一键生成: " + job.getId() + " ---");
+              appendJobLog(job.getId(), "--- 创建任务并立即执行: " + job.getId() + " ---");
               refreshList();
               Platform.runLater(
                   () -> {
                     jobList.getSelectionModel().select(0);
-                    renderJobService.runAiWorkflowAsync(job.getId(), uiLog(), this::touchUi);
+                    renderJobService.runAiWorkflowAsync(
+                        job.getId(), jobUiLog(job.getId()), this::touchUi);
                   });
             });
   }
@@ -1226,7 +1296,7 @@ public class MainViewController implements Initializable {
     buildAndEnqueue()
         .ifPresent(
             job -> {
-              appendLog("--- 已入队: " + job.getId() + " ---");
+              appendJobLog(job.getId(), "--- 已保存草稿任务: " + job.getId() + " ---");
               refreshList();
             });
   }
@@ -1278,7 +1348,8 @@ public class MainViewController implements Initializable {
             refJson,
             selectedPromptLocale(),
             overrides,
-            reliableGenerationCheck != null && reliableGenerationCheck.isSelected());
+            reliableGenerationCheck != null && reliableGenerationCheck.isSelected(),
+            allowFallbackModeCheck != null && allowFallbackModeCheck.isSelected());
     return Optional.of(job);
   }
 
@@ -1295,7 +1366,7 @@ public class MainViewController implements Initializable {
         referenceUrlsInput.getText(),
         selectedPromptLocale(),
         promptOverridesJsonInput.getText(),
-        msg -> Platform.runLater(() -> log.info("[framing] {}", msg)),
+        sessionUiLog(),
         json -> Platform.runLater(() -> problemPlanPreview.setText(json)),
         () -> Platform.runLater(this::refreshList));
   }
@@ -1303,7 +1374,7 @@ public class MainViewController implements Initializable {
   @FXML
   private void onCheckManim() {
     appendLog("--- 检测 Manim ---");
-    renderJobService.checkManimVersionAsync(uiLog(), this::touchUi);
+    renderJobService.checkManimVersionAsync(sessionUiLog(), this::touchUi);
   }
 
   @FXML
@@ -1313,8 +1384,8 @@ public class MainViewController implements Initializable {
       appendLog("请先在列表中选中一条任务。");
       return;
     }
-    appendLog("--- 内置测试渲染: " + selected.getId() + " ---");
-    renderJobService.runBuiltinTestAsync(selected.getId(), uiLog(), this::touchUi);
+    appendJobLog(selected.getId(), "--- 运行内置测试: " + selected.getId() + " ---");
+    renderJobService.runBuiltinTestAsync(selected.getId(), jobUiLog(selected.getId()), this::touchUi);
   }
 
   @FXML
@@ -1324,8 +1395,8 @@ public class MainViewController implements Initializable {
       appendLog("请先在列表中选中一条任务。");
       return;
     }
-    appendLog("--- AI + 渲染流水线: " + selected.getId() + " ---");
-    renderJobService.runAiWorkflowAsync(selected.getId(), uiLog(), this::touchUi);
+    appendJobLog(selected.getId(), "--- 执行选中任务: " + selected.getId() + " ---");
+    renderJobService.runAiWorkflowAsync(selected.getId(), jobUiLog(selected.getId()), this::touchUi);
   }
 
   @FXML
@@ -1353,10 +1424,11 @@ public class MainViewController implements Initializable {
             ins.strip(),
             selectedOutputMode(),
             selectedVideoQuality(),
-            reliableGenerationCheck != null && reliableGenerationCheck.isSelected());
-    appendLog("--- 已创建修改任务: " + job.getId() + " ---");
+            reliableGenerationCheck != null && reliableGenerationCheck.isSelected(),
+            allowFallbackModeCheck != null && allowFallbackModeCheck.isSelected());
+    appendJobLog(job.getId(), "--- 已创建修改任务并立即执行: " + job.getId() + " ---");
     refreshList();
-    renderJobService.runAiWorkflowAsync(job.getId(), uiLog(), this::touchUi);
+    renderJobService.runAiWorkflowAsync(job.getId(), jobUiLog(job.getId()), this::touchUi);
   }
 
   @FXML
@@ -1366,7 +1438,8 @@ public class MainViewController implements Initializable {
       appendLog("请先在列表中选中一条任务。");
       return;
     }
-    renderJobService.cancelJobAsync(selected.getId(), uiLog(), this::touchUi);
+    appendJobLog(selected.getId(), "--- 请求取消任务 ---");
+    renderJobService.cancelJobAsync(selected.getId(), jobUiLog(selected.getId()), this::touchUi);
   }
 
   @FXML
@@ -1441,7 +1514,8 @@ public class MainViewController implements Initializable {
       return;
     }
     UUID id = selected.getId();
-    renderJobService.deleteJobAsync(id, msg -> Platform.runLater(() -> appendLog(msg)), this::touchUi);
+    appendLog("--- 删除任务: " + id + " ---");
+    renderJobService.deleteJobAsync(id, sessionUiLog(), this::touchUi);
   }
 
   @FXML
@@ -1500,7 +1574,7 @@ public class MainViewController implements Initializable {
         base,
         key,
         model,
-        uiLog(),
+        sessionUiLog(),
         () ->
             Platform.runLater(
                 () -> {
@@ -1546,13 +1620,74 @@ public class MainViewController implements Initializable {
     return s == null ? "" : s;
   }
 
-  private Consumer<String> uiLog() {
+  @FXML
+  private void onCopyOutputLog() {
+    String t = outputLogArea != null ? outputLogArea.getText() : "";
+    if (t == null || t.isBlank()) {
+      appendLog("当前没有可复制的日志。");
+      return;
+    }
+    ClipboardContent cc = new ClipboardContent();
+    cc.putString(t);
+    Clipboard.getSystemClipboard().setContent(cc);
+    appendLog("已复制当前日志到剪贴板。");
+  }
+
+  @FXML
+  private void onClearOutputLog() {
+    RenderJob selected = jobList != null ? jobList.getSelectionModel().getSelectedItem() : null;
+    if (selected != null) {
+      jobLogBuffers.remove(selected.getId());
+      refreshOutputLog(selected);
+      appendLog("已清空当前任务的会话日志。");
+      return;
+    }
+    sessionLogBuffer.setLength(0);
+    refreshOutputLog(null);
+    appendLog("已清空本次会话日志。");
+  }
+
+  private Consumer<String> sessionUiLog() {
     return msg ->
         Platform.runLater(
             () -> {
-              log.info("[pipeline] {}", msg);
+              appendSessionLog(msg);
               refreshList();
             });
+  }
+
+  private Consumer<String> jobUiLog(UUID jobId) {
+    return msg ->
+        Platform.runLater(
+            () -> {
+              appendJobLog(jobId, msg);
+              refreshList();
+            });
+  }
+
+  private void appendSessionLog(String msg) {
+    log.info("[desk] {}", msg);
+    appendLine(sessionLogBuffer, msg);
+    RenderJob selected = jobList != null ? jobList.getSelectionModel().getSelectedItem() : null;
+    if (selected == null) {
+      refreshOutputLog(null);
+    }
+  }
+
+  private void appendJobLog(UUID jobId, String msg) {
+    log.info("[pipeline][{}] {}", jobId, msg);
+    appendLine(jobLogBuffers.computeIfAbsent(jobId, ignored -> new StringBuilder()), msg);
+    RenderJob selected = jobList != null ? jobList.getSelectionModel().getSelectedItem() : null;
+    if (selected != null && selected.getId().equals(jobId)) {
+      refreshOutputLog(selected);
+    }
+  }
+
+  private static void appendLine(StringBuilder sb, String msg) {
+    if (sb.length() > 0) {
+      sb.append(System.lineSeparator());
+    }
+    sb.append(msg == null ? "" : msg.strip());
   }
 
   private void touchUi() {
@@ -1560,7 +1695,309 @@ public class MainViewController implements Initializable {
   }
 
   private void appendLog(String msg) {
-    log.info("[desk] {}", msg);
+    appendSessionLog(msg);
+  }
+
+  private void refreshOutputLog(RenderJob job) {
+    if (outputLogArea == null) {
+      return;
+    }
+    outputLogArea.setText(buildOutputLogText(job));
+    outputLogArea.positionCaret(outputLogArea.getText().length());
+    outputLogArea.setScrollTop(Double.MAX_VALUE);
+  }
+
+  private void updateFallbackBadge(boolean active) {
+    if (outputFallbackBadgeLabel == null) {
+      return;
+    }
+    outputFallbackBadgeLabel.setVisible(active);
+    outputFallbackBadgeLabel.setManaged(active);
+    if (outputStatusLabel != null) {
+      outputStatusLabel.getStyleClass().remove("output-status-fallback");
+      if (active && !outputStatusLabel.getStyleClass().contains("output-status-fallback")) {
+        outputStatusLabel.getStyleClass().add("output-status-fallback");
+      }
+    }
+  }
+
+  private void updateOutputStatusTooltip(RenderJob job) {
+    if (outputStatusLabel == null) {
+      return;
+    }
+    if (job == null) {
+      outputStatusLabel.setTooltip(null);
+      if (outputFallbackBadgeLabel != null) {
+        outputFallbackBadgeLabel.setTooltip(null);
+      }
+      return;
+    }
+    StringBuilder tip = new StringBuilder();
+    tip.append("状态: ").append(displayJobState(job));
+    if (job.getProcessingStage() != null && job.getProcessingStage() != ProcessingStage.NONE) {
+      tip.append("\n阶段: ").append(formatProcessingStageZh(job.getProcessingStage()));
+    }
+    if (job.getFailureSummary() != null && !job.getFailureSummary().isBlank()) {
+      tip.append("\n失败诊断: ").append(job.getFailureSummary().strip());
+    }
+    if (job.getFailureRepairHint() != null && !job.getFailureRepairHint().isBlank()) {
+      tip.append("\n修补建议: ").append(job.getFailureRepairHint().strip());
+    }
+    Tooltip tooltip = new Tooltip(tip.toString());
+    tooltip.setWrapText(true);
+    tooltip.setMaxWidth(460);
+    outputStatusLabel.setTooltip(tooltip);
+    if (outputFallbackBadgeLabel != null) {
+      outputFallbackBadgeLabel.setTooltip(tooltip);
+    }
+  }
+
+  private void updateFailureSummaryCard(RenderJob job) {
+    if (outputFailureCard == null || outputFailureSummaryLabel == null) {
+      return;
+    }
+    boolean visible =
+        job != null
+            && ((job.getFailureSummary() != null && !job.getFailureSummary().isBlank())
+                || (job.getFailureRepairHint() != null && !job.getFailureRepairHint().isBlank())
+                || job.getStatus() == JobStatus.FAILED);
+    outputFailureCard.setVisible(visible);
+    outputFailureCard.setManaged(visible);
+    if (!visible) {
+      outputFailureSummaryLabel.setText("");
+      if (outputFailureMetaLabel != null) {
+        outputFailureMetaLabel.setText("");
+      }
+      return;
+    }
+    StringBuilder text = new StringBuilder();
+    if (job.getFailureSummary() != null && !job.getFailureSummary().isBlank()) {
+      text.append(job.getFailureSummary().strip());
+    }
+    if (job.getFailureRepairHint() != null && !job.getFailureRepairHint().isBlank()) {
+      if (text.length() > 0) {
+        text.append("\n\n");
+      }
+      text.append("建议修补：").append(job.getFailureRepairHint().strip());
+    }
+    if (text.length() == 0 && job.getErrorMessage() != null && !job.getErrorMessage().isBlank()) {
+      text.append(job.getErrorMessage().strip());
+    }
+    outputFailureSummaryLabel.setText(text.toString());
+    if (outputFailureMetaLabel != null) {
+      String meta = displayJobState(job);
+      if (job.isFallbackModeActive()) {
+        meta += " · 保底模式";
+      }
+      outputFailureMetaLabel.setText(meta);
+    }
+  }
+
+  private void installHistoryRetryActions() {
+    if (jobList == null || retrySelectedButton != null || retryFallbackButton != null) {
+      return;
+    }
+    if (!(jobList.getParent() instanceof VBox parent)) {
+      return;
+    }
+    VBox retryCard = new VBox(8);
+    retryCard.setAlignment(Pos.CENTER_LEFT);
+    retryCard.getStyleClass().add("history-action-card");
+
+    Label title = new Label("失败后快速处理");
+    title.getStyleClass().add("history-action-title");
+
+    retrySelectedButton = new Button("重试选中任务");
+    retrySelectedButton.getStyleClass().addAll("button", "btn-zen-primary");
+    retrySelectedButton.setFocusTraversable(false);
+    retrySelectedButton.setOnAction(e -> onRetrySelected(false));
+
+    retryFallbackButton = new Button("保底重试");
+    retryFallbackButton.getStyleClass().addAll("button", "btn-zen-outline", "btn-retry-fallback");
+    retryFallbackButton.setFocusTraversable(false);
+    retryFallbackButton.setOnAction(e -> onRetrySelected(true));
+
+    HBox buttonRow = new HBox(8);
+    buttonRow.setAlignment(Pos.CENTER_LEFT);
+    buttonRow.getChildren().addAll(retrySelectedButton, retryFallbackButton);
+
+    Label hint = new Label("普通重试会沿用原配置，保底重试会强制进入简化生成策略。");
+    hint.getStyleClass().add("history-action-hint");
+    hint.setWrapText(true);
+
+    retryCard.getChildren().addAll(title, buttonRow, hint);
+    int insertIndex = Math.max(0, parent.getChildren().indexOf(jobList));
+    parent.getChildren().add(insertIndex, retryCard);
+    updateRetryButtons();
+  }
+
+  private void updateRetryButtons() {
+    boolean enabled = false;
+    if (jobList != null) {
+      RenderJob selected = jobList.getSelectionModel().getSelectedItem();
+      enabled = selected != null;
+    }
+    if (retrySelectedButton != null) {
+      retrySelectedButton.setDisable(!enabled);
+    }
+    if (retryFallbackButton != null) {
+      retryFallbackButton.setDisable(!enabled);
+    }
+  }
+
+  private void onRetrySelected(boolean forceFallbackMode) {
+    RenderJob selected = jobList.getSelectionModel().getSelectedItem();
+    if (selected == null) {
+      appendLog("请先在列表中选中一条任务。");
+      return;
+    }
+    appendJobLog(
+        selected.getId(),
+        forceFallbackMode
+            ? "--- 创建保底重试任务并立即执行 ---"
+            : "--- 创建重试任务并立即执行 ---");
+    renderJobService.retryJobAsync(
+        selected.getId(),
+        forceFallbackMode,
+        jobUiLog(selected.getId()),
+        retried ->
+            Platform.runLater(
+                () -> {
+                  refreshList();
+                  jobList.getSelectionModel().select(retried);
+                  renderJobService.runAiWorkflowAsync(
+                      retried.getId(), jobUiLog(retried.getId()), this::touchUi);
+                }),
+        this::touchUi);
+  }
+
+  private void applyRuntimeCopy() {
+    if (oneClickGenerateButton != null) {
+      oneClickGenerateButton.setText("立即生成并执行");
+    }
+    if (useProblemFramingCheck != null) {
+      useProblemFramingCheck.setText("问题拆解");
+    }
+    if (useTwoStageCheck != null) {
+      useTwoStageCheck.setText("AI 多步生成（解题→分镜→代码）");
+    }
+    if (reliableGenerationCheck != null) {
+      reliableGenerationCheck.setText("稳定优先（减少复杂动画，优先成功率）");
+    }
+    if (allowFallbackModeCheck != null) {
+      allowFallbackModeCheck.setText("允许自动保底模式（多次失败后切换简化生成）");
+    }
+    if (outputFallbackBadgeLabel != null) {
+      outputFallbackBadgeLabel.setText("保底模式中");
+    }
+    if (outputPreviewFullscreenButton != null) {
+      outputPreviewFullscreenButton.setText("全屏预览");
+    }
+    if (settingsTestAiButton != null) {
+      settingsTestAiButton.setText("测试 AI 连接");
+    }
+    if (geogebraGenerateButton != null) {
+      geogebraGenerateButton.setText("生成 GeoGebra 指令");
+    }
+    if (geogebraPickImageButton != null) {
+      geogebraPickImageButton.setText("选择参考图");
+    }
+    if (conceptInput != null) {
+      conceptInput.setPromptText("例如：用 Manim 演示薄透镜成像，突出主光轴、焦点和会聚过程");
+    }
+    if (problemInput != null) {
+      problemInput.setPromptText("粘贴题目原文");
+    }
+    if (solutionInput != null) {
+      solutionInput.setPromptText("写出关键步骤、推导或讲解重点，方便分镜与配图");
+    }
+    if (answerInput != null) {
+      answerInput.setPromptText("可选：标准答案、结论或数值结果");
+    }
+    if (referenceUrlsInput != null) {
+      referenceUrlsInput.setPromptText("每行一个图片 URL");
+    }
+    if (promptOverridesJsonInput != null) {
+      promptOverridesJsonInput.setPromptText("{\"scene_designer\":\"...\"}");
+    }
+    if (problemPlanPreview != null) {
+      problemPlanPreview.setPromptText("仅预览问题拆解后，这里会显示规划 JSON");
+    }
+    if (editInstructionsInput != null) {
+      editInstructionsInput.setPromptText("例如：减少镜头数量，去掉 3D 和复杂 updater");
+    }
+    if (outputPreviewPlaceholder != null) {
+      outputPreviewPlaceholder.setText("当前还没有可预览的图片或视频");
+    }
+    if (outputPreviewPlayToggle != null) {
+      outputPreviewPlayToggle.setText("播放");
+    }
+    if (outputFailureSummaryLabel != null) {
+      outputFailureSummaryLabel.setText("当前任务的失败原因与修补建议会显示在这里");
+    }
+    if (outputFailureCard != null
+        && !outputFailureCard.getChildren().isEmpty()
+        && outputFailureCard.getChildren().get(0) instanceof HBox header
+        && !header.getChildren().isEmpty()
+        && header.getChildren().get(0) instanceof Labeled title) {
+      title.setText("失败诊断");
+    }
+  }
+
+  private String buildOutputLogText(RenderJob job) {
+    if (job == null) {
+      String session = sessionLogBuffer.toString();
+      return session.isBlank() ? "当前没有任务日志。执行检查、测试或开始生成后，日志会显示在这里。" : session;
+    }
+    StringBuilder text = new StringBuilder();
+    text.append("任务类型: ")
+        .append(job.getJobKind() == JobKind.MODIFY ? "修改任务" : "生成任务")
+        .append(System.lineSeparator());
+    text.append("任务 ID: ").append(job.getId()).append(System.lineSeparator());
+    text.append("状态: ").append(displayJobState(job)).append(System.lineSeparator());
+    if (job.getProcessingStage() != null && job.getProcessingStage() != ProcessingStage.NONE) {
+      text.append("阶段: ").append(formatProcessingStageZh(job.getProcessingStage())).append(System.lineSeparator());
+    }
+    text.append("模式: ")
+        .append(job.getOutputMode())
+        .append(" / ")
+        .append(job.getVideoQuality())
+        .append(System.lineSeparator());
+    if (job.isFallbackModeActive()) {
+      text.append("保底模板模式：已启用").append(System.lineSeparator());
+    }
+    text.append("自动保底: ")
+        .append(job.isAllowFallbackMode() ? "开启" : "关闭")
+        .append(System.lineSeparator());
+    if (job.getScriptPath() != null && !job.getScriptPath().isBlank()) {
+      text.append("脚本: ").append(job.getScriptPath()).append(System.lineSeparator());
+    }
+    if (job.getOutputMediaPath() != null && !job.getOutputMediaPath().isBlank()) {
+      text.append("输出: ").append(job.getOutputMediaPath()).append(System.lineSeparator());
+    }
+    if (job.getFailureSummary() != null && !job.getFailureSummary().isBlank()) {
+      text.append(System.lineSeparator()).append("[失败诊断]").append(System.lineSeparator());
+      text.append(job.getFailureSummary().strip()).append(System.lineSeparator());
+    }
+    if (job.getFailureRepairHint() != null && !job.getFailureRepairHint().isBlank()) {
+      text.append(System.lineSeparator()).append("[修补建议]").append(System.lineSeparator());
+      text.append(job.getFailureRepairHint().strip()).append(System.lineSeparator());
+    }
+    if (job.getErrorMessage() != null && !job.getErrorMessage().isBlank()) {
+      text.append(System.lineSeparator()).append("[错误]").append(System.lineSeparator());
+      text.append(job.getErrorMessage().strip()).append(System.lineSeparator());
+    }
+    StringBuilder buffer = jobLogBuffers.get(job.getId());
+    if (buffer != null && buffer.length() > 0) {
+      text.append(System.lineSeparator()).append("[运行日志]").append(System.lineSeparator());
+      text.append(buffer);
+    } else if (text.length() > 0) {
+      text.append(System.lineSeparator())
+          .append("[运行日志]")
+          .append(System.lineSeparator())
+          .append("当前任务还没有收集到会话日志。接下来新的运行过程会显示在这里。");
+    }
+    return text.toString().strip();
   }
 
   private void refreshList() {
@@ -1575,16 +2012,34 @@ public class MainViewController implements Initializable {
       if (found.isPresent()) {
         jobList.getSelectionModel().select(found.get());
         updateOutputPreview(found.get());
+        refreshOutputLog(found.get());
+        updateFallbackBadge(found.get().isFallbackModeActive());
+        updateOutputStatusTooltip(found.get());
+        updateFailureSummaryCard(found.get());
       } else {
         updateOutputPreview(null);
+        refreshOutputLog(null);
+        updateFallbackBadge(false);
+        updateOutputStatusTooltip(null);
+        updateFailureSummaryCard(null);
       }
+    } else {
+      refreshOutputLog(null);
+      updateFallbackBadge(false);
+      updateOutputStatusTooltip(null);
+      updateFailureSummaryCard(null);
     }
+    updateRetryButtons();
   }
 
   private void updateChrome(List<RenderJob> jobs) {
     if (studioStatusLabel == null || outputStatusLabel == null || historyCountLabel == null) {
       return;
     }
+    updateFallbackBadge(false);
+    outputStatusLabel
+        .getStyleClass()
+        .removeAll("output-status-live", "output-status-ready", "output-status-failed", "output-status-draft");
     long active =
         jobs.stream()
             .filter(j -> j.getStatus() == JobStatus.QUEUED || j.getStatus() == JobStatus.PROCESSING)
@@ -1600,16 +2055,53 @@ public class MainViewController implements Initializable {
         String suffix =
             st != null && st != ProcessingStage.NONE ? " · " + formatProcessingStageZh(st) : "";
         setOutputChromeClasses(ChromeMode.PIPELINE);
-        outputStatusLabel.setText("渲染中" + suffix);
+        updateOutputStatusTooltip(j);
+        if (j.isFallbackModeActive()) {
+          updateFallbackBadge(true);
+          outputStatusLabel.setText("保底模式中" + suffix);
+        } else {
+          outputStatusLabel.setText("处理中" + suffix);
+        }
       } else {
         setOutputChromeClasses(ChromeMode.PIPELINE);
-        outputStatusLabel.setText("排队中");
+        RenderJob queuedHead =
+            jobs.stream().filter(j -> j.getStatus() == JobStatus.QUEUED).findFirst().orElse(null);
+        updateOutputStatusTooltip(queuedHead);
+        if (queuedHead != null && queuedHead.isFallbackModeActive()) {
+          updateFallbackBadge(true);
+          outputStatusLabel.setText("保底排队中");
+        } else {
+          outputStatusLabel.setText("排队中");
+        }
       }
     } else {
       studioStatusLabel.setText("> 空闲");
       studioStatusLabel.getStyleClass().removeAll("studio-prompt-idle", "studio-prompt-busy");
       studioStatusLabel.getStyleClass().add("studio-prompt-idle");
-      RenderJob head = jobs.isEmpty() ? null : jobs.get(0);
+      RenderJob selected = jobList != null ? jobList.getSelectionModel().getSelectedItem() : null;
+      RenderJob head = selected != null ? selected : (jobs.isEmpty() ? null : jobs.get(0));
+      if (head != null && head.isFallbackModeActive()) {
+        updateFallbackBadge(true);
+      }
+      updateOutputStatusTooltip(head);
+      if (head != null && displayJobState(head).equals("草稿")) {
+        setOutputChromeClasses(ChromeMode.DRAFT);
+        outputStatusLabel.setText("草稿任务");
+        historyCountLabel.setText(String.format("%02d", jobs.size()));
+        return;
+      }
+      if (head != null && head.getStatus() == JobStatus.FAILED) {
+        setOutputChromeClasses(ChromeMode.FAILED);
+        outputStatusLabel.setText("生成失败");
+        historyCountLabel.setText(String.format("%02d", jobs.size()));
+        return;
+      }
+      if (head != null && head.getStatus() == JobStatus.QUEUED) {
+        setOutputChromeClasses(ChromeMode.PIPELINE);
+        outputStatusLabel.setText("排队中");
+        historyCountLabel.setText(String.format("%02d", jobs.size()));
+        return;
+      }
       boolean hasOutput =
           head != null
               && head.getStatus() == JobStatus.COMPLETED
@@ -1629,15 +2121,23 @@ public class MainViewController implements Initializable {
   private enum ChromeMode {
     WAITING,
     PIPELINE,
-    READY
+    READY,
+    FAILED,
+    DRAFT
   }
 
   private void setOutputChromeClasses(ChromeMode mode) {
-    outputStatusLabel.getStyleClass().removeAll("output-status-live", "output-status-ready");
+    outputStatusLabel
+        .getStyleClass()
+        .removeAll("output-status-live", "output-status-ready", "output-status-failed", "output-status-draft");
     if (mode == ChromeMode.PIPELINE) {
       outputStatusLabel.getStyleClass().add("output-status-live");
     } else if (mode == ChromeMode.READY) {
       outputStatusLabel.getStyleClass().add("output-status-ready");
+    } else if (mode == ChromeMode.FAILED) {
+      outputStatusLabel.getStyleClass().add("output-status-failed");
+    } else if (mode == ChromeMode.DRAFT) {
+      outputStatusLabel.getStyleClass().add("output-status-draft");
     }
   }
 
@@ -1651,6 +2151,20 @@ public class MainViewController implements Initializable {
   }
 
   /** 状态栏展示用，避免直接显示枚举英文名。 */
+  private static String displayJobState(RenderJob job) {
+    if (job == null) {
+      return "";
+    }
+    if (job.getStatus() == JobStatus.QUEUED
+        && job.getProcessingStage() == ProcessingStage.NONE
+        && (job.getScriptPath() == null || job.getScriptPath().isBlank())
+        && (job.getOutputMediaPath() == null || job.getOutputMediaPath().isBlank())
+        && (job.getErrorMessage() == null || job.getErrorMessage().isBlank())) {
+      return "草稿";
+    }
+    return shortStatus(job.getStatus());
+  }
+
   private static String formatProcessingStageZh(ProcessingStage st) {
     if (st == null) {
       return "";

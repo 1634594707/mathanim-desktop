@@ -20,3 +20,4 @@ __pycache__/
 
 # Large example renders (optional: remove this line to track)
 examples/manim/ai-reference/output/
+generated-videos/

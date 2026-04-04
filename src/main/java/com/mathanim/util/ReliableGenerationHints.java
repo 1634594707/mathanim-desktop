@@ -1,22 +1,24 @@
 package com.mathanim.util;
 
 /**
- * 在「稳定优先」开启时追加到送入 AI 的 concept 末尾，降低高难度任务首次渲染失败率（manim exit=1）。
+ * Appends stability-oriented guidance to AI prompts so complex tasks degrade gracefully instead of
+ * repeatedly failing at render time.
  */
 public final class ReliableGenerationHints {
 
   public static final String APPENDIX_ZH =
       "【渲染稳定性约束（必须遵守）】\n"
-          + "- 总镜头 ≤6，construct 建议 ≤200 行；讲清核心步骤即可，避免堆砌冗长代数动画。\n"
-          + "- 禁止 MathTex(..., weight=) / Tex(..., weight=)（仅 Text 支持 weight）；加粗用 LaTeX \\mathbf 或增大 font_size。\n"
-          + "- 禁止对 MathTex 用 mobject[0][i:j] 硬编码子对象切片做 Indicate/ReplacementTransform；对整段公式 Indicate，或 FadeOut+Write。\n"
+          + "- 总镜头 <= 6，construct 建议 <= 300 行；讲清核心步骤即可，避免堆砌冗长动画。\n"
+          + "- 单镜头内同时活跃对象尽量 <= 12；同一时刻并行动画尽量 <= 4。\n"
+          + "- 优先使用 Create / FadeIn / FadeOut / Write / Transform / ReplacementTransform / Indicate。\n"
+          + "- 非必要不要使用 always_redraw、复杂 updater、ValueTracker 驱动的大量连续重绘、长路径跟踪。\n"
+          + "- 如果内容很多，优先改成“静态示意图 + 重点高亮 + 短文本说明”，不要把每一步都做成连续动画。\n"
+          + "- 教学清晰度优先于炫技；宁可简单稳定，也不要镜头很多但无法渲染。\n"
+          + "- 禁止 MathTex(..., weight=) / Tex(..., weight=)；仅 Text 支持 weight。\n"
+          + "- 禁止对 MathTex 用 mobject[0][i:j] 之类硬编码切片做局部变换；对整段公式高亮，或拆成多个对象。\n"
           + "- 禁止 ReplacementTransform(某段 MathTex 的局部, 另一段 MathTex 的局部)。\n"
-          + "- ThreeDScene 相机（减少「角度怪、裁切、公式歪」）：\n"
-          + "  · set_camera_orientation 建议 phi=60°～75°、theta=-40°～-55°、gamma=0、zoom=0.65～0.85（zoom<1 为拉远）；勿用过小 zoom 导致只拍到边缘。\n"
-          + "  · ThreeDAxes 与主体几何用 move_to(ORIGIN)，禁止大位移如 .shift(LEFT*3) 把四面体/坐标系挤出画面。\n"
-          + "  · 长公式、投影条件、旁注：用 add_fixed_in_frame_mobjects（或右侧竖排公式），勿把整段 MathTex 仅 to_corner 摆在 3D 里随透视歪斜。\n"
-          + "  · 顶点旁短标签可用 add_fixed_orientation_mobjects；需要「正对屏幕」的说明一律 fixed_in_frame。\n"
-          + "- 易错时可将最难的一镜改为 2D Axes 示意图 + 文字，其余仍可用 3D。\n";
+          + "- 3D 仅在确有必要时使用；长公式、注释、结论优先 fixed_in_frame。\n"
+          + "- 易错时可将最难的一镜改成 2D 坐标示意图 + 文本，其余镜头保持教学连贯即可。\n";
 
   private ReliableGenerationHints() {}
 
@@ -29,5 +31,55 @@ public final class ReliableGenerationHints {
       return APPENDIX_ZH;
     }
     return base + "\n\n" + APPENDIX_ZH;
+  }
+
+  public static String appendRepairHints(
+      String concept,
+      String failureStage,
+      String diagnosticSummary,
+      String diagnosticHint,
+      int pass,
+      int maxPasses,
+      boolean fallbackMode) {
+    String base = concept != null ? concept.strip() : "";
+    StringBuilder sb = new StringBuilder();
+    if (!base.isEmpty()) {
+      sb.append(base).append("\n\n");
+    }
+    sb.append("【修补策略（必须遵守）】\n");
+    sb.append("- 目标是得到可稳定渲染的正确版本，不是保留所有视觉细节。\n");
+    if ("manim_render".equals(failureStage)) {
+      sb.append("- 本次失败发生在 Manim 渲染阶段，说明场景过重、过复杂或运行时不稳定。\n");
+      sb.append("- 必须主动降复杂度：删减镜头、删减对象、删减长文本、删减并行动画，保留核心教学结论即可。\n");
+      sb.append("- 优先把复杂连续演示改成静态图 + 重点高亮 + 分步文字说明。\n");
+      sb.append("- 能用 2D 就不要硬上 3D；能用基础几何与文本说明，就不要依赖持续更新对象。\n");
+    } else if ("py_compile".equals(failureStage)) {
+      sb.append("- 本次失败发生在静态检查阶段，先保证语法、导入和类结构完全正确，再考虑视觉细节。\n");
+    }
+    if (diagnosticSummary != null && !diagnosticSummary.isBlank()) {
+      sb.append("- 失败诊断：").append(diagnosticSummary.strip()).append("\n");
+    }
+    if (diagnosticHint != null && !diagnosticHint.isBlank()) {
+      sb.append("- 定向修补建议：").append(diagnosticHint.strip()).append("\n");
+    }
+    if (pass >= 2) {
+      sb.append("- 当前已进入多轮修补，禁止继续增加新镜头或新特效；只能做收缩和稳态修复。\n");
+    }
+    if (pass >= Math.max(2, maxPasses - 1)) {
+      sb.append("- 当前已接近最后轮次：强制收缩到 3~4 个镜头、总时长 35 秒以内、单镜头对象尽量 8 个以内。\n");
+      sb.append("- 最后一轮宁可输出简化教学版，也不要保留不稳定的大型场景。\n");
+    }
+    if (fallbackMode) {
+      sb.append("\n【保底模板模式（强制执行）】\n");
+      sb.append("- 忽略原方案中不必要的华丽分镜，输出“极简教学版”。\n");
+      sb.append("- 强制限制为 <= 3 个镜头。\n");
+      sb.append("- 强制限制为 1 个主图 + 少量文字 + 少量高亮动画。\n");
+      sb.append("- 禁止 3D、禁止 always_redraw、禁止复杂 updater、禁止大规模并行动画。\n");
+      sb.append("- 优先采用：标题 -> 静态示意图 -> 关键结论高亮 这类保守结构。\n");
+      sb.append("- 如果原题包含多个子主题，只保留最核心的一个结论，其他内容压缩成一句文字说明。\n");
+      sb.append("- 输出目标是“肯定能渲染”的教学草稿，不追求完整炫酷。\n");
+    }
+    sb.append("- 修补后仍需保持主类名 GeneratedScene，不要输出 markdown。\n");
+    return sb.toString();
   }
 }

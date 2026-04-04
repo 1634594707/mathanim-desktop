@@ -42,6 +42,18 @@ public class RenderJob {
   @Column(length = 4096)
   private String errorMessage;
 
+  @Column(length = 512)
+  private String failureSummary;
+
+  @Column(length = 2048)
+  private String failureRepairHint;
+
+  @Column
+  private Boolean fallbackModeActive;
+
+  @Column
+  private Boolean forceFallbackMode;
+
   /** TEXT 映射，避免 SQLite 上过时的 CHECK(processing_stage in (...)) 拦新枚举值。 */
   @Enumerated(EnumType.STRING)
   @Column(columnDefinition = "TEXT")
@@ -97,6 +109,9 @@ public class RenderJob {
   @Column
   private Boolean reliableGeneration;
 
+  @Column
+  private Boolean allowFallbackMode;
+
   /** {@link com.mathanim.domain.ProblemFramingPlan} 的 JSON。 */
   @Lob
   @Column(columnDefinition = "TEXT")
@@ -138,6 +153,15 @@ public class RenderJob {
     if (reliableGeneration == null) {
       reliableGeneration = Boolean.TRUE;
     }
+    if (allowFallbackMode == null) {
+      allowFallbackMode = Boolean.TRUE;
+    }
+    if (fallbackModeActive == null) {
+      fallbackModeActive = Boolean.FALSE;
+    }
+    if (forceFallbackMode == null) {
+      forceFallbackMode = Boolean.FALSE;
+    }
   }
 
   public UUID getId() {
@@ -178,6 +202,38 @@ public class RenderJob {
 
   public void setErrorMessage(String errorMessage) {
     this.errorMessage = errorMessage;
+  }
+
+  public String getFailureSummary() {
+    return failureSummary;
+  }
+
+  public void setFailureSummary(String failureSummary) {
+    this.failureSummary = failureSummary;
+  }
+
+  public String getFailureRepairHint() {
+    return failureRepairHint;
+  }
+
+  public void setFailureRepairHint(String failureRepairHint) {
+    this.failureRepairHint = failureRepairHint;
+  }
+
+  public boolean isFallbackModeActive() {
+    return Boolean.TRUE.equals(fallbackModeActive);
+  }
+
+  public void setFallbackModeActive(boolean fallbackModeActive) {
+    this.fallbackModeActive = fallbackModeActive;
+  }
+
+  public boolean isForceFallbackMode() {
+    return Boolean.TRUE.equals(forceFallbackMode);
+  }
+
+  public void setForceFallbackMode(boolean forceFallbackMode) {
+    this.forceFallbackMode = forceFallbackMode;
   }
 
   public ProcessingStage getProcessingStage() {
@@ -266,6 +322,14 @@ public class RenderJob {
 
   public void setReliableGeneration(boolean reliableGeneration) {
     this.reliableGeneration = reliableGeneration;
+  }
+
+  public boolean isAllowFallbackMode() {
+    return allowFallbackMode == null || Boolean.TRUE.equals(allowFallbackMode);
+  }
+
+  public void setAllowFallbackMode(boolean allowFallbackMode) {
+    this.allowFallbackMode = allowFallbackMode;
   }
 
   public String getProblemPlanJson() {

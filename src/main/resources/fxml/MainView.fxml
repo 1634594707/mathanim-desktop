@@ -162,6 +162,7 @@
                               <CheckBox fx:id="useTwoStageCheck" styleClass="zen-check" text="两阶段（解题→分镜→代码）" selected="true"/>
                             </HBox>
                             <CheckBox fx:id="reliableGenerationCheck" styleClass="zen-check" text="稳定优先（少分镜、降失败率）" selected="true" wrapText="true"/>
+                            <CheckBox fx:id="allowFallbackModeCheck" styleClass="zen-check" text="渲染多次失败后自动切换保底模板模式" selected="true" wrapText="true"/>
                           </VBox>
                         </VBox>
                         <VBox styleClass="zen-section-inner" spacing="8">
@@ -237,6 +238,9 @@
                 </padding>
                 <Label fx:id="outputStatusLabel" text="等待输出"
                        styleClass="output-status-title"/>
+                <Label fx:id="outputFallbackBadgeLabel" text="保底模式中"
+                       visible="false" managed="false"
+                       styleClass="output-status-badge,output-status-badge-fallback"/>
                 <Region HBox.hgrow="ALWAYS"/>
               </HBox>
             </top>
@@ -273,6 +277,29 @@
                     <Label fx:id="outputPreviewTimeLabel" text="0:00 / 0:00" styleClass="zen-hint"
                            minWidth="100"/>
                   </HBox>
+                </VBox>
+                <VBox fx:id="outputFailureCard" spacing="6" visible="false" managed="false" styleClass="output-failure-card">
+                  <HBox alignment="CENTER_LEFT" spacing="8">
+                    <Label text="澶辫触璇婃柇" styleClass="zen-micro-heading"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Label fx:id="outputFailureMetaLabel" text="" styleClass="output-failure-meta" wrapText="true"/>
+                  </HBox>
+                  <Label fx:id="outputFailureSummaryLabel"
+                         text="褰撳墠浠诲姟鐨勫け璐ュ師鍥犱笌淇ˉ寤鸿浼氭樉绀哄湪杩欓噷"
+                         styleClass="output-failure-text" wrapText="true" maxWidth="720"/>
+                </VBox>
+                <VBox spacing="8" styleClass="output-log-wrap">
+                  <HBox alignment="CENTER_LEFT" spacing="10">
+                    <Label text="日志" styleClass="zen-micro-heading"/>
+                    <Label text="当前选中任务 / 未选中时显示本次会话日志" styleClass="zen-hint" wrapText="true"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button text="复制" focusTraversable="false" onAction="#onCopyOutputLog"
+                            styleClass="button,btn-zen-ghost"/>
+                    <Button text="清空" focusTraversable="false" onAction="#onClearOutputLog"
+                            styleClass="button,btn-zen-ghost"/>
+                  </HBox>
+                  <TextArea fx:id="outputLogArea" editable="false" wrapText="true" prefRowCount="8"
+                            minHeight="156" promptText="运行日志会显示在这里" styleClass="log-view"/>
                 </VBox>
               </VBox>
             </center>

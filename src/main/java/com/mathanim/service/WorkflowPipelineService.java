@@ -14,6 +14,7 @@ import com.mathanim.prompt.PromptOverridesParser;
 import com.mathanim.config.ManimProperties;
 import com.mathanim.repo.RenderJobRepository;
 import com.mathanim.util.ProblemPlanMerge;
+import com.mathanim.util.ManimFailureDiagnostics;
 import com.mathanim.util.ReferenceImagesParser;
 import com.mathanim.util.ReliableGenerationHints;
 import org.springframework.stereotype.Service;
@@ -99,6 +100,9 @@ public class WorkflowPipelineService {
 
     job.setStatus(JobStatus.PROCESSING);
     job.setErrorMessage(null);
+    job.setFailureSummary(null);
+    job.setFailureRepairHint(null);
+    job.setFallbackModeActive(false);
     job.setOutputMediaPath(null);
     renderJobRepository.save(job);
 
@@ -150,6 +154,9 @@ public class WorkflowPipelineService {
     String code = null;
     String lastFailureStage = "";
     String lastFailureDetail = "";
+    String lastFailureSummary = "";
+    String lastFailureRepairHint = "";
+    int renderFailureCount = 0;
 
     for (int pass = 1; pass <= maxPasses; pass++) {
       if (isCancelled(jobId)) {
@@ -161,6 +168,7 @@ public class WorkflowPipelineService {
 
       job = renderJobRepository.findById(jobId).orElseThrow();
       job.setProcessingStage(ProcessingStage.CODE_GENERATING);
+      job.setFallbackModeActive(job.isForceFallbackMode() || renderFailureCount >= 2);
       renderJobRepository.save(job);
       log.accept(
           "[阶段] AI "
@@ -183,9 +191,22 @@ public class WorkflowPipelineService {
             code = manimAiCodeService.generateInitialCode(job, aiConcept, log);
           }
         } else {
+          boolean fallbackMode = job.isForceFallbackMode() || (job.isAllowFallbackMode() && renderFailureCount >= 2);
+          if (fallbackMode) {
+            log.accept("[策略] 已进入保底模板模式：后续修补将强制输出极简教学版。");
+          }
+          String repairConcept =
+              ReliableGenerationHints.appendRepairHints(
+                  aiConcept,
+                  lastFailureStage,
+                  lastFailureSummary,
+                  lastFailureRepairHint,
+                  pass,
+                  maxPasses,
+                  fallbackMode);
           code =
               manimAiCodeService.repairSceneCode(
-                  aiConcept, code, lastFailureStage, lastFailureDetail, promptOverrides);
+                  repairConcept, code, lastFailureStage, lastFailureDetail, promptOverrides);
         }
       } catch (RuntimeException e) {
         fail(job, "AI 失败: " + e.getMessage());
@@ -217,6 +238,12 @@ public class WorkflowPipelineService {
       if (!compile.success()) {
         lastFailureStage = "py_compile";
         lastFailureDetail = compile.message() + "\n" + compile.stdout();
+        lastFailureSummary = "静态检查未通过";
+        lastFailureRepairHint = "先修正语法、导入和类定义，再考虑动画细节。";
+        job = renderJobRepository.findById(jobId).orElseThrow();
+        job.setFailureSummary(lastFailureSummary);
+        job.setFailureRepairHint(lastFailureRepairHint);
+        renderJobRepository.save(job);
         if (pass >= maxPasses) {
           job = renderJobRepository.findById(jobId).orElseThrow();
           fail(job, "静态检查失败（已达最大轮次）: " + lastFailureDetail);
@@ -277,6 +304,9 @@ public class WorkflowPipelineService {
             exported != null ? exported.toAbsolutePath().toString() : rendered.toAbsolutePath().toString();
         job.setOutputMediaPath(storedPath);
         job.setErrorMessage(null);
+        job.setFailureSummary(null);
+        job.setFailureRepairHint(null);
+        job.setFallbackModeActive(false);
         job.setProcessingStage(ProcessingStage.NONE);
         renderJobRepository.save(job);
         log.accept("完成: " + storedPath);
@@ -293,10 +323,21 @@ public class WorkflowPipelineService {
 
       lastFailureStage = "manim_render";
       lastFailureDetail = render.message() + "\n" + render.stdout();
+      ManimFailureDiagnostics.Diagnostic diag =
+          ManimFailureDiagnostics.classify(render.message(), render.stdout());
+      renderFailureCount++;
+      lastFailureSummary = diag.summary();
+      lastFailureRepairHint = diag.repairHint();
+      job = renderJobRepository.findById(jobId).orElseThrow();
+      job.setFailureSummary(lastFailureSummary);
+      job.setFailureRepairHint(lastFailureRepairHint);
+      renderJobRepository.save(job);
+      log.accept("失败诊断: " + diag.summary());
+      log.accept("修补方向: " + diag.repairHint());
       if (pass >= maxPasses) {
         job = renderJobRepository.findById(jobId).orElseThrow();
         job.setStatus(JobStatus.FAILED);
-        job.setErrorMessage(trim(lastFailureDetail, 4000));
+        job.setErrorMessage(trim(diag.summary() + "\n" + lastFailureDetail, 4000));
         job.setProcessingStage(ProcessingStage.NONE);
         renderJobRepository.save(job);
         log.accept("渲染失败（已达最大轮次）: " + render.message());
@@ -332,6 +373,12 @@ public class WorkflowPipelineService {
   private void fail(RenderJob job, String message) {
     job.setStatus(JobStatus.FAILED);
     job.setErrorMessage(trim(message, 4000));
+    if (job.getFailureSummary() == null || job.getFailureSummary().isBlank()) {
+      job.setFailureSummary("任务执行失败");
+    }
+    if (job.getFailureRepairHint() == null || job.getFailureRepairHint().isBlank()) {
+      job.setFailureRepairHint("查看错误详情和运行日志，优先从环境、脚本复杂度或提示词约束继续排查。");
+    }
     job.setProcessingStage(ProcessingStage.NONE);
     renderJobRepository.save(job);
   }
