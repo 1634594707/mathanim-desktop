@@ -368,6 +368,23 @@
   -fx-text-fill: #222222;
 }
 
+/* 多选高亮样式 */
+.list-view .list-cell.job-cell-selected {
+  -fx-background-color: linear-gradient(to right, rgba(66, 165, 245, 0.16), rgba(33, 150, 243, 0.08));
+  -fx-border-color: rgba(33, 150, 243, 0.28);
+  -fx-border-width: 0 0 0 4;
+}
+
+.list-view .list-cell.job-cell-selected:filled:hover {
+  -fx-background-color: rgba(33, 150, 243, 0.14);
+}
+
+.list-view .list-cell.job-cell-selected:filled:selected,
+.list-view .list-cell.job-cell-selected:filled:selected:focused {
+  -fx-background-color: rgba(33, 150, 243, 0.22);
+  -fx-text-fill: #222222;
+}
+
 .output-log-wrap {
   -fx-background-color: transparent;
 }
@@ -454,6 +471,92 @@
   -fx-background-color: transparent;
   -fx-border-color: rgba(69, 90, 100, 0.1);
   -fx-border-width: 1 0 0 0;
+}
+
+.output-summary-card {
+  -fx-padding: 0;
+  -fx-fill-width: true;
+}
+
+.output-summary-pill {
+  -fx-spacing: 4;
+  -fx-padding: 12 14 12 14;
+  -fx-background-color: linear-gradient(to bottom right, rgba(255, 255, 255, 0.82), rgba(245, 242, 234, 0.92));
+  -fx-background-radius: 16;
+  -fx-border-color: rgba(69, 90, 100, 0.12);
+  -fx-border-radius: 16;
+  -fx-border-width: 1;
+  -fx-min-height: 76;
+}
+
+.output-summary-pill-compact {
+  -fx-min-width: 108;
+  -fx-pref-width: 108;
+}
+
+.output-summary-caption {
+  -fx-font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif;
+  -fx-font-size: 10px;
+  -fx-font-weight: 700;
+  -fx-letter-spacing: 0.12em;
+  -fx-text-fill: #90a4ae;
+}
+
+.output-summary-value {
+  -fx-font-size: 13px;
+  -fx-font-weight: 700;
+  -fx-text-fill: #37474f;
+}
+
+.output-summary-value-soft {
+  -fx-font-size: 12px;
+  -fx-font-weight: 500;
+  -fx-text-fill: #546e7a;
+  -fx-line-spacing: 2;
+}
+
+.history-filter-row {
+  -fx-padding: 8 10 8 10;
+  -fx-background-color: rgba(69, 90, 100, 0.045);
+  -fx-background-radius: 12;
+  -fx-border-color: rgba(69, 90, 100, 0.08);
+  -fx-border-radius: 12;
+  -fx-border-width: 1;
+  -fx-alignment: center-left;
+}
+
+.history-search-field {
+  -fx-min-width: 160;
+}
+
+.history-filter-row .choice-box {
+  -fx-min-width: 120;
+}
+
+.history-filter-row .button {
+  -fx-min-width: 36;
+  -fx-padding: 0 10;
+}
+
+.history-toolbar {
+  -fx-padding: 0 0 2 0;
+}
+
+.history-toolbar .button {
+  -fx-min-height: 30;
+}
+
+.batch-operation-bar {
+  -fx-padding: 8 10 8 10;
+  -fx-background-color: linear-gradient(to bottom right, rgba(255, 248, 225, 0.96), rgba(255, 243, 224, 0.96));
+  -fx-background-radius: 12;
+  -fx-border-color: rgba(255, 112, 67, 0.20);
+  -fx-border-radius: 12;
+  -fx-border-width: 1;
+}
+
+.batch-operation-bar .button {
+  -fx-min-height: 30;
 }
 
 .history-action-card {
@@ -731,6 +834,16 @@
 
 .settings-scroll .viewport {
   -fx-background-color: #faf9f5;
+}
+
+.settings-section-card {
+  -fx-padding: 18 20 18 20;
+  -fx-spacing: 12;
+  -fx-background-color: linear-gradient(to bottom right, rgba(255, 255, 255, 0.86), rgba(248, 245, 238, 0.96));
+  -fx-background-radius: 18;
+  -fx-border-color: rgba(69, 90, 100, 0.10);
+  -fx-border-radius: 18;
+  -fx-border-width: 1;
 }
 
 /* —— 输入框：与画布同系暖灰底（微凹陷），避免「白卡片」割裂 —— */

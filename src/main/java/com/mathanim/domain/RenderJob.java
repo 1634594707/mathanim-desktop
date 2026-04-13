@@ -1,5 +1,8 @@
 package com.mathanim.domain;
 
+import java.time.Instant;
+import java.util.UUID;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -10,9 +13,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Lob;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-
-import java.time.Instant;
-import java.util.UUID;
 
 @Entity
 @Table(name = "render_jobs")
@@ -112,6 +112,13 @@ public class RenderJob {
   @Column
   private Boolean allowFallbackMode;
 
+  /**
+   * 是否标记为收藏任务。
+   * <p>旧行 {@code null} 在 getter 中视为 false。
+   */
+  @Column
+  private Boolean favorited;
+
   /** {@link com.mathanim.domain.ProblemFramingPlan} 的 JSON。 */
   @Lob
   @Column(columnDefinition = "TEXT")
@@ -161,6 +168,9 @@ public class RenderJob {
     }
     if (forceFallbackMode == null) {
       forceFallbackMode = Boolean.FALSE;
+    }
+    if (favorited == null) {
+      favorited = Boolean.FALSE;
     }
   }
 
@@ -362,5 +372,13 @@ public class RenderJob {
 
   public void setPromptOverridesJson(String promptOverridesJson) {
     this.promptOverridesJson = promptOverridesJson;
+  }
+
+  public boolean isFavorited() {
+    return Boolean.TRUE.equals(favorited);
+  }
+
+  public void setFavorited(boolean favorited) {
+    this.favorited = favorited;
   }
 }

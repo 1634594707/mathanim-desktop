@@ -1,27 +1,28 @@
 package com.mathanim.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mathanim.domain.JobKind;
-import com.mathanim.domain.JobStatus;
-import com.mathanim.domain.OutputMode;
-import com.mathanim.domain.ProcessingStage;
-import com.mathanim.domain.PromptLocale;
-import com.mathanim.domain.ProblemFramingPlan;
-import com.mathanim.domain.ReferenceImageItem;
-import com.mathanim.domain.RenderJob;
-import com.mathanim.domain.VideoQuality;
-import com.mathanim.ai.OpenAiChatClient;
-import com.mathanim.prompt.PromptOverridesDto;
-import com.mathanim.prompt.PromptOverridesParser;
-import com.mathanim.repo.RenderJobRepository;
-import com.mathanim.util.ReferenceImagesParser;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mathanim.ai.OpenAiChatClient;
+import com.mathanim.domain.JobKind;
+import com.mathanim.domain.JobStatus;
+import com.mathanim.domain.OutputMode;
+import com.mathanim.domain.ProblemFramingPlan;
+import com.mathanim.domain.ProcessingStage;
+import com.mathanim.domain.PromptLocale;
+import com.mathanim.domain.ReferenceImageItem;
+import com.mathanim.domain.RenderJob;
+import com.mathanim.domain.VideoQuality;
+import com.mathanim.prompt.PromptOverridesDto;
+import com.mathanim.prompt.PromptOverridesParser;
+import com.mathanim.repo.RenderJobRepository;
+import com.mathanim.util.ReferenceImagesParser;
 
 @Service
 public class RenderJobService {
@@ -428,4 +429,114 @@ public class RenderJobService {
     }
     return s.length() <= max ? s : s.substring(0, max) + "…";
   }
+
+  // ========== 新增：搜索、筛选和批量操作 ==========
+
+  @Transactional(readOnly = true)
+  public List<RenderJob> searchJobs(String keyword) {
+    if (keyword == null || keyword.isBlank()) {
+      return listRecent();
+    }
+    return renderJobRepository.searchByKeyword(keyword.trim());
+  }
+
+  @Transactional(readOnly = true)
+  public List<RenderJob> filterByStatus(JobStatus status) {
+    if (status == null) {
+      return listRecent();
+    }
+    return renderJobRepository.findAllByStatus(status);
+  }
+
+  @Transactional(readOnly = true)
+  public List<RenderJob> listFavorited() {
+    return renderJobRepository.findAllByFavoritedTrueOrderByCreatedAtDesc();
+  }
+
+  @Transactional(readOnly = true)
+  public List<RenderJob> searchAndFilter(String keyword, JobStatus status) {
+    if ((keyword == null || keyword.isBlank()) && status == null) {
+      return listRecent();
+    }
+    if (keyword == null || keyword.isBlank()) {
+      return filterByStatus(status);
+    }
+    if (status == null) {
+      return searchJobs(keyword);
+    }
+    return renderJobRepository.searchByKeywordAndStatus(keyword.trim(), status);
+  }
+
+  @Transactional
+  public void toggleFavorite(UUID jobId) {
+    RenderJob job =
+        renderJobRepository
+            .findById(jobId)
+            .orElseThrow(() -> new IllegalArgumentException("任务不存在: " + jobId));
+    job.setFavorited(!job.isFavorited());
+    renderJobRepository.save(job);
+  }
+
+  @Transactional
+  public void batchDelete(List<UUID> jobIds) {
+    for (UUID jobId : jobIds) {
+      try {
+        deleteJob(jobId);
+      } catch (Exception e) {
+        // 继续删除其他任务
+      }
+    }
+  }
+
+  public void batchDeleteAsync(List<UUID> jobIds, Consumer<String> log, Runnable onComplete) {
+    manimExecutorService.execute(
+        () -> {
+          try {
+            batchDelete(jobIds);
+            log.accept("已批量删除 " + jobIds.size() + " 个任务");
+          } catch (RuntimeException e) {
+            log.accept("批量删除失败: " + e.getMessage());
+          } finally {
+            onComplete.run();
+          }
+        });
+  }
+
+  @Transactional
+  public List<RenderJob> batchRetry(List<UUID> jobIds, boolean forceFallbackMode) {
+    List<RenderJob> retried = new java.util.ArrayList<>();
+    for (UUID jobId : jobIds) {
+      try {
+        RenderJob job = retryJob(jobId, forceFallbackMode);
+        retried.add(job);
+      } catch (Exception e) {
+        // 继续重试其他任务
+      }
+    }
+    return retried;
+  }
+
+  public void batchRetryAsync(
+      List<UUID> jobIds,
+      boolean forceFallbackMode,
+      Consumer<String> log,
+      Consumer<List<RenderJob>> onCreated,
+      Runnable onComplete) {
+    manimExecutorService.execute(
+        () -> {
+          try {
+            List<RenderJob> retried = batchRetry(jobIds, forceFallbackMode);
+            log.accept(
+                (forceFallbackMode ? "已批量创建保底重试任务: " : "已批量创建重试任务: ")
+                    + retried.size()
+                    + " 个");
+            onCreated.accept(retried);
+          } catch (RuntimeException e) {
+            log.accept("批量重试失败: " + e.getMessage());
+          } finally {
+            onComplete.run();
+          }
+        });
+  }
 }
+

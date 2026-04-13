@@ -25,6 +25,7 @@
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
@@ -47,9 +48,9 @@
                      maxWidth="28" maxHeight="28">
             <Region styleClass="brand-mark-paper"/>
             <SVGPath styleClass="brand-mark-pi"
-                     content="M 4 21 L 4 6.5 L 6.25 6.5 L 6.25 21 Z M 9.75 21 L 9.75 6.5 L 12 6.5 L 12 21 Z M 5.25 6.5 L 10.75 6.5 L 10.75 8.75 L 5.25 8.75 Z"/>
+                     content="M 4.5 21 L 4.5 7 L 7.2 7 L 11 12.8 L 14.8 7 L 17.5 7 L 17.5 21 L 15.1 21 L 15.1 11.4 L 11 17.6 L 6.9 11.4 L 6.9 21 Z"/>
             <SVGPath styleClass="brand-mark-play"
-                     content="M 15.5 7.5 L 15.5 20.5 L 25.5 14 Z"/>
+                     content="M 18.8 9.2 L 25.2 14 L 18.8 18.8 Z"/>
           </StackPane>
           <Label text="MathAnim · 课堂" styleClass="window-title"/>
         </HBox>
@@ -63,17 +64,17 @@
     <center>
     <TabPane tabClosingPolicy="UNAVAILABLE" styleClass="zen-tab-pane" VBox.vgrow="ALWAYS">
       <Tab text="创作">
-        <SplitPane dividerPositions="0.45" styleClass="zen-split" orientation="HORIZONTAL">
+        <SplitPane dividerPositions="0.42" styleClass="zen-split" orientation="HORIZONTAL">
           <!-- 左：Studio；勿设 maxWidth，否则分隔条无法拉宽左栏 -->
-          <VBox styleClass="studio-left" minWidth="280" prefWidth="480" spacing="0">
+          <VBox styleClass="studio-left" minWidth="300" prefWidth="500" spacing="0">
             <HBox styleClass="studio-header" alignment="CENTER_LEFT" spacing="14">
               <StackPane styleClass="brand-mark-wrap" prefWidth="44" prefHeight="44" minWidth="44" minHeight="44"
                          maxWidth="44" maxHeight="44">
                 <Region styleClass="brand-mark-paper"/>
                 <SVGPath styleClass="brand-mark-pi"
-                         content="M 6 34 L 6 9.5 L 10 9.5 L 10 34 Z M 16.5 34 L 16.5 9.5 L 20.5 9.5 L 20.5 34 Z M 8 9.5 L 19 9.5 L 19 13 L 8 13 Z"/>
+                         content="M 7.1 33 L 7.1 11 L 11.3 11 L 17.3 20.1 L 23.3 11 L 27.5 11 L 27.5 33 L 23.7 33 L 23.7 17.9 L 17.3 27.6 L 10.8 17.9 L 10.8 33 Z"/>
                 <SVGPath styleClass="brand-mark-play"
-                         content="M 24 10 L 24 33 L 39 21.5 Z"/>
+                         content="M 29.5 14.5 L 39.6 21.9 L 29.5 29.3 Z"/>
               </StackPane>
               <VBox spacing="3">
                 <Label text="MathAnim" styleClass="brand-wordmark"/>
@@ -230,19 +231,40 @@
             </HBox>
           </VBox>
           <!-- 右：输出 / 日志 / 历史（WAITING FOR OUTPUT + HISTORY） -->
-          <BorderPane styleClass="output-pane" minWidth="400">
+          <BorderPane styleClass="output-pane" minWidth="460">
             <top>
-              <HBox styleClass="output-status-bar" alignment="CENTER_LEFT">
-                <padding>
-                  <Insets bottom="10" left="16" right="16" top="16"/>
-                </padding>
-                <Label fx:id="outputStatusLabel" text="等待输出"
-                       styleClass="output-status-title"/>
-                <Label fx:id="outputFallbackBadgeLabel" text="保底模式中"
-                       visible="false" managed="false"
-                       styleClass="output-status-badge,output-status-badge-fallback"/>
-                <Region HBox.hgrow="ALWAYS"/>
-              </HBox>
+              <VBox spacing="10">
+                <HBox styleClass="output-status-bar" alignment="CENTER_LEFT">
+                  <padding>
+                    <Insets bottom="0" left="16" right="16" top="16"/>
+                  </padding>
+                  <Label fx:id="outputStatusLabel" text="&#x7B49;&#x5F85;&#x8F93;&#x51FA;"
+                         styleClass="output-status-title"/>
+                  <Label fx:id="outputFallbackBadgeLabel" text="&#x4FDD;&#x5E95;&#x6A21;&#x5F0F;&#x4E2D;"
+                         visible="false" managed="false"
+                         styleClass="output-status-badge,output-status-badge-fallback"/>
+                  <Region HBox.hgrow="ALWAYS"/>
+                </HBox>
+                <VBox styleClass="output-summary-card" spacing="8">
+                  <padding>
+                    <Insets bottom="4" left="14" right="14" top="0"/>
+                  </padding>
+                  <HBox spacing="10" alignment="CENTER_LEFT">
+                    <VBox styleClass="output-summary-pill" HBox.hgrow="ALWAYS">
+                      <Label text="&#x5F53;&#x524D;&#x7126;&#x70B9;" styleClass="output-summary-caption"/>
+                      <Label fx:id="outputSummaryStateLabel" text="&#x7B49;&#x5F85;&#x8F93;&#x51FA;" styleClass="output-summary-value"/>
+                    </VBox>
+                    <VBox styleClass="output-summary-pill,output-summary-pill-compact">
+                      <Label text="&#x4EFB;&#x52A1;&#x6570;" styleClass="output-summary-caption"/>
+                      <Label fx:id="outputSummaryCountLabel" text="00" styleClass="output-summary-value"/>
+                    </VBox>
+                  </HBox>
+                  <VBox styleClass="output-summary-pill">
+                    <Label text="&#x4E0B;&#x4E00;&#x6B65;" styleClass="output-summary-caption"/>
+                    <Label fx:id="outputSummaryNextStepLabel" text="&#x4ECE;&#x5DE6;&#x4FA7;&#x586B;&#x5199;&#x5185;&#x5BB9;&#x5E76;&#x5F00;&#x59CB;&#x751F;&#x6210;" styleClass="output-summary-value,output-summary-value-soft" wrapText="true"/>
+                  </VBox>
+                </VBox>
+              </VBox>
             </top>
             <center>
               <VBox spacing="8" styleClass="output-preview-column">
@@ -308,7 +330,7 @@
                 <padding>
                   <Insets bottom="14" left="14" right="14" top="12"/>
                 </padding>
-                <HBox alignment="CENTER_LEFT" spacing="0">
+                <FlowPane alignment="CENTER_LEFT" hgap="6" vgap="6" styleClass="history-toolbar">
                   <Label text="任务" styleClass="history-cap"/>
                   <Label text=" · " styleClass="history-sep"/>
                   <Label fx:id="historyCountLabel" text="00" styleClass="history-count"/>
@@ -320,6 +342,27 @@
                           styleClass="button,btn-zen-ghost"/>
                   <Button text="删除" focusTraversable="false" onAction="#onDeleteJob"
                           styleClass="button,btn-zen-danger"/>
+                </FlowPane>
+                <!-- 新增：搜索和筛选区域 -->
+                <HBox spacing="8" alignment="CENTER_LEFT" styleClass="history-filter-row">
+                  <TextField fx:id="jobSearchField" promptText="搜索任务..." 
+                             styleClass="zen-input,history-search-field" prefWidth="220" HBox.hgrow="ALWAYS"/>
+                  <ChoiceBox fx:id="jobFilterChoice" prefWidth="120" styleClass="zen-choice"/>
+                  <Button fx:id="jobToggleFavoriteButton" text="★" focusTraversable="false" 
+                          onAction="#onToggleFavorite" styleClass="button,btn-zen-ghost" 
+                          disable="true" minWidth="32"/>
+                </HBox>
+                <!-- 新增：批量操作区域 -->
+                <HBox spacing="6" alignment="CENTER_LEFT" fx:id="batchOperationBar" 
+                      visible="false" managed="false" styleClass="batch-operation-bar">
+                  <Label fx:id="batchSelectionLabel" text="已选 0 项" styleClass="zen-hint"/>
+                  <Region HBox.hgrow="ALWAYS"/>
+                  <Button text="批量删除" focusTraversable="false" onAction="#onBatchDelete"
+                          styleClass="button,btn-zen-danger"/>
+                  <Button text="批量重试" focusTraversable="false" onAction="#onBatchRetry"
+                          styleClass="button,btn-zen-soft"/>
+                  <Button text="批量保底重试" focusTraversable="false" onAction="#onBatchRetryFallback"
+                          styleClass="button,btn-zen-outline"/>
                 </HBox>
                 <ListView fx:id="jobList" minHeight="112" prefHeight="160"/>
               </VBox>
@@ -370,19 +413,16 @@
       </Tab>
       <Tab text="设置">
         <ScrollPane fitToWidth="true" styleClass="settings-scroll" hbarPolicy="NEVER">
-          <VBox spacing="0">
+          <VBox spacing="18">
             <padding>
               <Insets bottom="28" left="28" right="28" top="24"/>
             </padding>
-            <VBox styleClass="zen-section,zen-section-wide" spacing="12" maxWidth="720">
+            <VBox styleClass="settings-section-card" spacing="12" maxWidth="720">
               <HBox alignment="CENTER_LEFT">
-                <Label text="API 与本地环境" styleClass="zen-section-title"/>
+                <Label text="&#x8FD0;&#x884C;&#x73AF;&#x5883;" styleClass="zen-section-title"/>
                 <Region HBox.hgrow="ALWAYS"/>
-                <Label text="覆盖配置文件" styleClass="zen-section-tag"/>
+                <Label text="Base URL / Key / Model" styleClass="zen-section-tag"/>
               </HBox>
-              <Label text="覆盖 application.yml 中的 mathanim.ai；留空则使用配置文件。" styleClass="zen-hint" wrapText="true"/>
-              <Label text="API：任意 OpenAI 兼容端点即可（官方 / Azure / DeepSeek / 本地兼容服务），仅换 Base URL、Key、Model，不改流水线逻辑。默认 yml 为 DeepSeek：base-url 以 /v1 结尾、model 用 deepseek-chat。详见 classpath prompts/PIPELINE.md。" styleClass="zen-hint" wrapText="true"/>
-              <Label text="提示词角色：在「创作 → 高级」用 JSON 覆盖 problemFraming · conceptDesigner · codeGeneration · codeRetry，与多阶段 Agent handoff 一一对应。" styleClass="zen-hint" wrapText="true"/>
               <GridPane hgap="14" vgap="14">
                 <columnConstraints>
                   <ColumnConstraints minWidth="120" prefWidth="128" hgrow="NEVER"/>
@@ -394,20 +434,44 @@
                 <PasswordField fx:id="settingsApiKey" GridPane.columnIndex="1" GridPane.rowIndex="1" maxWidth="Infinity"/>
                 <Label text="Model" styleClass="zen-form-label" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
                 <TextField fx:id="settingsModel" GridPane.columnIndex="1" GridPane.rowIndex="2" maxWidth="Infinity"/>
-                <Label text="修补轮次" styleClass="zen-form-label" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-                <TextField fx:id="settingsMaxRetry" GridPane.columnIndex="1" GridPane.rowIndex="3" prefWidth="100" maxWidth="140" promptText="空 = yml"/>
+              </GridPane>
+              <Label text="&#x652F;&#x6301; OpenAI &#x517C;&#x5BB9;&#x63A5;&#x53E3;&#x3002;&#x8FD9;&#x91CC;&#x53EA;&#x6539;&#x6A21;&#x578B;&#x8FDE;&#x63A5;&#xFF0C;&#x4E0D;&#x5F71;&#x54CD;&#x521B;&#x4F5C;&#x9875;&#x5DE5;&#x4F5C;&#x6D41;&#x3002;" styleClass="zen-hint" wrapText="true"/>
+            </VBox>
+            <VBox styleClass="settings-section-card" spacing="12" maxWidth="720">
+              <HBox alignment="CENTER_LEFT">
+                <Label text="&#x8FD0;&#x884C;&#x73AF;&#x5883;" styleClass="zen-section-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="&#x8FDE;&#x63A5;&#x9A8C;&#x8BC1;" styleClass="zen-section-tag"/>
+              </HBox>
+              <GridPane hgap="14" vgap="14">
+                <columnConstraints>
+                  <ColumnConstraints minWidth="120" prefWidth="128" hgrow="NEVER"/>
+                  <ColumnConstraints hgrow="ALWAYS" minWidth="240"/>
+                </columnConstraints>
+                <Label text="&#x4FEE;&#x8865;&#x8F6E;&#x6B21;" styleClass="zen-form-label" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                <TextField fx:id="settingsMaxRetry" GridPane.columnIndex="1" GridPane.rowIndex="3" prefWidth="100" maxWidth="140" promptText="&#x7A7A; = yml"/>
                 <Label text="Python" styleClass="zen-form-label" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
                 <TextField fx:id="settingsPython" GridPane.columnIndex="1" GridPane.rowIndex="4" maxWidth="Infinity"
-                           promptText="与 Manim 同环境"/>
+                           promptText="&#x4E0E; Manim &#x540C;&#x73AF;&#x5883;"/>
               </GridPane>
+              <Label text="&#x7559;&#x7A7A;&#x65F6;&#x4F18;&#x5148;&#x4F7F;&#x7528; application.yml&#x3002;&#x5EFA;&#x8BAE;&#x586B;&#x5199;&#x5F53;&#x524D;&#x684C;&#x9762;&#x73AF;&#x5883;&#x91CC;&#x53EF;&#x76F4;&#x63A5;&#x8C03;&#x7528;&#x7684; Python&#x3002;" styleClass="zen-hint" wrapText="true"/>
+            </VBox>
+            <VBox styleClass="settings-section-card" spacing="12" maxWidth="720">
+              <HBox alignment="CENTER_LEFT">
+                <Label text="&#x4FDD;&#x5B58;&#x4E0E;&#x6D4B;&#x8BD5;" styleClass="zen-section-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label text="&#x8FDE;&#x63A5;&#x9A8C;&#x8BC1;" styleClass="zen-section-tag"/>
+              </HBox>
+              <Label text="&#x5148;&#x4FDD;&#x5B58;&#xFF0C;&#x518D;&#x6D4B;&#x8BD5; AI &#x8FDE;&#x63A5;&#x3002;&#x6D4B;&#x8BD5;&#x53EA;&#x9A8C;&#x8BC1;&#x6587;&#x672C;&#x8FD4;&#x56DE;&#xFF0C;&#x4E0D;&#x4EE3;&#x8868;&#x89C6;&#x89C9;&#x6A21;&#x578B;&#x4E00;&#x5B9A;&#x53EF;&#x7528;&#x3002;" styleClass="zen-hint" wrapText="true"/>
               <HBox spacing="12" alignment="CENTER_LEFT">
-                <Button text="保存" onAction="#onSaveSettings" styleClass="button,btn-zen-primary"/>
-                <Button text="重新加载" onAction="#onReloadSettings" styleClass="button,btn-zen-outline"/>
-                <Button fx:id="settingsTestAiButton" text="测试连接" onAction="#onTestAiConnection" styleClass="button,btn-zen-outline"/>
+                <Button text="&#x4FDD;&#x5B58;" onAction="#onSaveSettings" styleClass="button,btn-zen-primary"/>
+                <Button text="&#x91CD;&#x65B0;&#x52A0;&#x8F7D;" onAction="#onReloadSettings" styleClass="button,btn-zen-outline"/>
+                <Button fx:id="settingsTestAiButton" text="&#x6D4B;&#x8BD5;&#x8FDE;&#x63A5;" onAction="#onTestAiConnection" styleClass="button,btn-zen-outline"/>
               </HBox>
             </VBox>
           </VBox>
         </ScrollPane>
+
       </Tab>
     </TabPane>
     </center>
