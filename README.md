@@ -111,6 +111,26 @@ cd mathanim-desktop
 .\mvnw.cmd -DskipTests package
 ```
 
+## Release 下载与启动
+
+已发布版本：[`v0.1.0`](https://github.com/1634594707/mathanim-desktop/releases/tag/v0.1.0)
+
+### 下载
+
+在 Release 页面下载：
+
+- `mathanim-desktop-0.1.0-SNAPSHOT.jar`
+
+### 启动
+
+在已安装 JDK 17+ 的环境中执行：
+
+```powershell
+java -jar .\mathanim-desktop-0.1.0-SNAPSHOT.jar
+```
+
+若你本机已配置 Python / Manim，首次启动后按“设置”页提示完成 `Base URL / API Key / Model / Python` 配置即可使用。
+
 应用入口类：
 
 - `com.mathanim.MathAnimLauncher`
