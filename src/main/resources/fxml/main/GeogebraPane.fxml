@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.web.WebView?>
+
+<SplitPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+           fx:controller="com.mathanim.ui.GeogebraController"
+           dividerPositions="0.36" styleClass="zen-split" orientation="HORIZONTAL">
+  <items>
+    <VBox minWidth="260" prefWidth="400" spacing="10" styleClass="studio-left">
+      <padding>
+        <Insets bottom="14" left="14" right="14" top="14"/>
+      </padding>
+      <Label styleClass="zen-section-title" text="题目 → GeoGebra"/>
+      <Label styleClass="zen-hint" wrapText="true"
+             text="一句话描述几何/函数题，或上传题目图。题目图需要「设置」中的模型支持多模态（视觉），如纯文本模型则只能根据文字生成。右侧需联网加载 GeoGebra；API 与「设置」一致。"/>
+      <Label styleClass="edu-field-label" text="文字描述"/>
+      <TextArea fx:id="geogebraProblemInput" prefRowCount="4" wrapText="true" minHeight="100"
+                promptText="例如：构造 △ABC，AB=5，BC=6，AC=7，并标出三边。"
+                styleClass="zen-input"/>
+      <HBox spacing="8" alignment="CENTER_LEFT">
+        <Button fx:id="geogebraPickImageButton" text="上传题目图…" onAction="#onGeogebraPickImage"
+                styleClass="button,btn-zen-outline"/>
+        <Button text="清除图片" onAction="#onGeogebraClearImage" styleClass="button,btn-zen-ghost"/>
+      </HBox>
+      <HBox spacing="10" alignment="CENTER_LEFT">
+        <CheckBox fx:id="geogebraEnable3dCheck" text="三维模式（依赖 WebGL；右侧空白请先取消并点「重新加载画布」）"
+                  styleClass="zen-check" wrapText="true"/>
+        <Button text="重新加载画布" onAction="#onGeogebraReloadHost" styleClass="button,btn-zen-outline"/>
+      </HBox>
+      <Label fx:id="geogebraImageStatusLabel" styleClass="zen-hint" wrapText="true"/>
+      <Button fx:id="geogebraGenerateButton" maxWidth="Infinity" text="AI 生成并作图"
+              onAction="#onGeogebraGenerate" styleClass="button,btn-zen-hero"/>
+      <Label styleClass="zen-micro-heading" text="代数指令（每行一条；# 开头的行为说明）"/>
+      <TextArea fx:id="geogebraCommandsArea" prefRowCount="10" wrapText="true" VBox.vgrow="ALWAYS" minHeight="120"
+                promptText="生成后显示指令；可在文本框中修改后再点「重新应用」。" styleClass="code-editor"/>
+      <HBox spacing="8" alignment="CENTER_LEFT">
+        <Button text="复制指令" onAction="#onGeogebraCopyCommands" styleClass="button,btn-zen-soft"/>
+        <Button text="重新应用" onAction="#onGeogebraReapplyCommands" styleClass="button,btn-zen-outline"/>
+      </HBox>
+    </VBox>
+    <BorderPane minWidth="380" styleClass="output-pane">
+      <center>
+        <WebView fx:id="geogebraWebView" minWidth="320" minHeight="400" prefWidth="640" prefHeight="520"/>
+      </center>
+    </BorderPane>
+  </items>
+</SplitPane>

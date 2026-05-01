@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Accordion?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.shape.SVGPath?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.mathanim.ui.StudioController"
+      styleClass="studio-left" minWidth="300" prefWidth="500" spacing="0">
+  <HBox styleClass="studio-header" alignment="CENTER_LEFT" spacing="14">
+    <StackPane styleClass="brand-mark-wrap" prefWidth="44" prefHeight="44" minWidth="44" minHeight="44"
+               maxWidth="44" maxHeight="44">
+      <Region styleClass="brand-mark-paper"/>
+      <SVGPath styleClass="brand-mark-pi"
+               content="M 7.1 33 L 7.1 11 L 11.3 11 L 17.3 20.1 L 23.3 11 L 27.5 11 L 27.5 33 L 23.7 33 L 23.7 17.9 L 17.3 27.6 L 10.8 17.9 L 10.8 33 Z"/>
+      <SVGPath styleClass="brand-mark-play"
+               content="M 29.5 14.5 L 39.6 21.9 L 29.5 29.3 Z"/>
+    </StackPane>
+    <VBox spacing="3">
+      <Label text="MathAnim" styleClass="brand-wordmark"/>
+      <Label text="师生 · 动画备课" styleClass="brand-tagline"/>
+    </VBox>
+    <Region HBox.hgrow="ALWAYS"/>
+    <Label text="Desktop" styleClass="studio-meta"/>
+  </HBox>
+  <HBox styleClass="studio-ready" alignment="CENTER_LEFT" spacing="8">
+    <Label text="① 选模式与例题  ·  ② 填写内容  ·  ③ 一键生成" styleClass="studio-ready-flow"/>
+  </HBox>
+  <ScrollPane fitToWidth="true" styleClass="studio-scroll" hbarPolicy="NEVER" VBox.vgrow="ALWAYS">
+    <VBox spacing="0">
+      <padding>
+        <Insets bottom="8" left="14" right="14" top="8"/>
+      </padding>
+      <VBox styleClass="zen-section,zen-section-quick" spacing="10">
+        <fx:define>
+          <ToggleGroup fx:id="creationModeGroup"/>
+        </fx:define>
+        <HBox alignment="CENTER_LEFT">
+          <Label text="创作" styleClass="zen-section-title"/>
+          <Region HBox.hgrow="ALWAYS"/>
+          <Label text="课堂" styleClass="zen-section-tag"/>
+        </HBox>
+        <Label text="直接描述：一句话说明要画什么。题干模式：粘贴题目与解析，AI 自动分镜并生成 Manim。" styleClass="zen-hint" wrapText="true"/>
+        <HBox styleClass="edu-mode-segment" alignment="CENTER_LEFT" spacing="0">
+          <ToggleButton fx:id="modeDirectToggle" text="直接描述" toggleGroup="$creationModeGroup"
+                        selected="true" styleClass="edu-mode-toggle"/>
+          <ToggleButton fx:id="modeTutorToggle" text="题干 + 解析" toggleGroup="$creationModeGroup"
+                        styleClass="edu-mode-toggle"/>
+        </HBox>
+        <VBox spacing="6">
+          <Label text="参考例题" styleClass="zen-micro-heading"/>
+          <ComboBox fx:id="exampleCombo" maxWidth="Infinity" styleClass="edu-example-combo"/>
+        </VBox>
+        <VBox fx:id="directModePane" spacing="8">
+          <Label text="想生成什么（图像或动画）" styleClass="edu-field-label"/>
+          <TextArea fx:id="conceptInput" prefRowCount="5" wrapText="true" minHeight="120"
+                    promptText="例如：用 Manim 演示勾股定理，配直角三角形标注与配色…"
+                    styleClass="zen-input,concept-hero"/>
+          <HBox alignment="CENTER_RIGHT">
+            <Label fx:id="conceptCharCount" text="0" styleClass="char-count-label"/>
+          </HBox>
+        </VBox>
+        <VBox fx:id="tutorModePane" spacing="10" visible="false" managed="false">
+          <VBox styleClass="edu-tutor-field" spacing="4">
+            <Label text="题目" styleClass="edu-field-label"/>
+            <TextArea fx:id="problemInput" prefRowCount="3" wrapText="true" minHeight="72"
+                      promptText="粘贴题干…" styleClass="zen-input,concept-hero"/>
+          </VBox>
+          <VBox styleClass="edu-tutor-field" spacing="4">
+            <Label text="解析与步骤" styleClass="edu-field-label"/>
+            <TextArea fx:id="solutionInput" prefRowCount="5" wrapText="true" minHeight="120"
+                      promptText="写出关键步骤，便于分镜与配图…" styleClass="zen-input,concept-hero"/>
+          </VBox>
+          <VBox styleClass="edu-tutor-field" spacing="4">
+            <Label text="参考答案（可选）" styleClass="edu-field-label"/>
+            <TextArea fx:id="answerInput" prefRowCount="2" wrapText="true" minHeight="52"
+                      promptText="可选：标准答案或数值…" styleClass="zen-input,concept-hero"/>
+          </VBox>
+        </VBox>
+        <HBox styleClass="zen-toolbar" alignment="CENTER_LEFT" spacing="8">
+          <Label text="导出" styleClass="zen-micro-heading"/>
+          <HBox styleClass="zen-segment" alignment="CENTER_LEFT" spacing="6">
+            <ChoiceBox fx:id="outputModeChoice" prefWidth="108"/>
+            <ChoiceBox fx:id="videoQualityChoice" prefWidth="108"/>
+            <ChoiceBox fx:id="promptLocaleChoice" prefWidth="92"/>
+          </HBox>
+        </HBox>
+        <HBox styleClass="zen-actions-main" alignment="CENTER">
+          <Button fx:id="oneClickGenerateButton" text="一键生成并渲染" onAction="#onOneClickGenerate" styleClass="button,btn-zen-hero"/>
+        </HBox>
+        <Label text="快捷键 Ctrl+Enter 提交（入队 → AI → Manim）" styleClass="zen-hint-subtle" wrapText="true"/>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+          <Button text="仅入队" onAction="#onEnqueue" styleClass="button,btn-zen-outline"/>
+          <Button text="检测 Manim" onAction="#onCheckManim" styleClass="button,btn-zen-ghost"/>
+        </HBox>
+      </VBox>
+      <Accordion styleClass="zen-accordion">
+        <panes>
+          <TitledPane text="高级选项（参考图、提示词覆盖、拆解预览、改代码）" expanded="false" animated="false">
+            <VBox spacing="0">
+              <VBox styleClass="zen-section-inner" spacing="8">
+                <Label text="AI 选项" styleClass="zen-micro-heading"/>
+                <VBox spacing="8" styleClass="zen-chips-wrap">
+                  <HBox spacing="16" alignment="CENTER_LEFT">
+                    <CheckBox fx:id="useProblemFramingCheck" styleClass="zen-check" text="问题拆解"/>
+                    <CheckBox fx:id="useTwoStageCheck" styleClass="zen-check" text="两阶段（解题→分镜→代码）" selected="true"/>
+                  </HBox>
+                  <CheckBox fx:id="reliableGenerationCheck" styleClass="zen-check" text="稳定优先（少分镜、降失败率）" selected="true" wrapText="true"/>
+                  <CheckBox fx:id="allowFallbackModeCheck" styleClass="zen-check" text="渲染多次失败后自动切换保底模板模式" selected="true" wrapText="true"/>
+                </VBox>
+              </VBox>
+              <VBox styleClass="zen-section-inner" spacing="8">
+                <HBox alignment="CENTER_LEFT">
+                  <Label text="参考图" styleClass="zen-section-title"/>
+                  <Region HBox.hgrow="ALWAYS"/>
+                  <Label text="每行 URL" styleClass="zen-section-tag"/>
+                </HBox>
+                <Label text="每行一图 URL，建议 ≤4 张" styleClass="zen-hint"/>
+                <TextArea fx:id="referenceUrlsInput" prefRowCount="2" wrapText="true" minHeight="48"
+                          promptText="https://…"/>
+              </VBox>
+              <VBox styleClass="zen-section-inner" spacing="8">
+                <HBox alignment="CENTER_LEFT">
+                  <Label text="提示词覆盖" styleClass="zen-section-title"/>
+                  <Region HBox.hgrow="ALWAYS"/>
+                  <Label text="JSON" styleClass="zen-section-tag"/>
+                </HBox>
+                <Label text="多角色提示词覆盖（可选）" styleClass="zen-hint"/>
+                <TextArea fx:id="promptOverridesJsonInput" prefRowCount="2" wrapText="true" minHeight="44"/>
+              </VBox>
+              <VBox styleClass="zen-section-inner" spacing="8">
+                <HBox alignment="CENTER_LEFT">
+                  <Label text="拆解规划" styleClass="zen-section-title"/>
+                  <Region HBox.hgrow="ALWAYS"/>
+                  <Label text="预览 JSON" styleClass="zen-section-tag"/>
+                </HBox>
+                <Label text="规划 JSON：可预览、粘贴或留空由流水线生成" styleClass="zen-hint"/>
+                <TextArea fx:id="problemPlanPreview" prefRowCount="4" wrapText="true" minHeight="72"
+                          promptText="{ … }" styleClass="zen-input,code-editor"/>
+                <Button text="仅预览拆解" onAction="#onProblemFramingPreview" styleClass="button,btn-zen-outline"/>
+              </VBox>
+              <VBox styleClass="zen-section-inner" spacing="10">
+                <Label text="工具" styleClass="zen-micro-heading"/>
+                <HBox spacing="8" alignment="CENTER_LEFT">
+                  <Button text="AI → 渲染（所选任务）" onAction="#onAiWorkflow" styleClass="button,btn-zen-soft"/>
+                  <Button text="内置测试" onAction="#onRunBuiltinTest" styleClass="button,btn-zen-ghost"/>
+                  <Region HBox.hgrow="ALWAYS"/>
+                  <Button text="取消任务" onAction="#onCancelJob" styleClass="button,btn-zen-danger"/>
+                </HBox>
+              </VBox>
+              <VBox styleClass="zen-section-inner" spacing="8">
+                <HBox alignment="CENTER_LEFT">
+                  <Label text="修改脚本" styleClass="zen-section-title"/>
+                  <Region HBox.hgrow="ALWAYS"/>
+                  <Label text="Python" styleClass="zen-section-tag"/>
+                </HBox>
+                <TextArea fx:id="codeInput" prefRowCount="5" wrapText="true" minHeight="88"
+                          promptText="generated_scene.py" styleClass="code-editor"/>
+                <TextArea fx:id="editInstructionsInput" prefRowCount="2" wrapText="true" minHeight="44"
+                          promptText="修改说明…"/>
+                <Button text="修改并入队" onAction="#onModifyAndRun" styleClass="button,btn-zen-soft"/>
+              </VBox>
+            </VBox>
+          </TitledPane>
+        </panes>
+      </Accordion>
+    </VBox>
+  </ScrollPane>
+  <HBox styleClass="studio-footer" alignment="CENTER_LEFT">
+    <Label fx:id="studioStatusLabel" text="&gt; 空闲"
+           styleClass="studio-prompt,studio-prompt-idle"/>
+    <Region HBox.hgrow="ALWAYS"/>
+    <Label text="创作" styleClass="studio-hint-cap"/>
+  </HBox>
+</VBox>

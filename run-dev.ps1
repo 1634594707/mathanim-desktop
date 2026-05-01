@@ -4,6 +4,7 @@
 #        .\run-dev.ps1 spring-boot:run
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+cmd /c chcp 65001 > $null
 Set-Location $PSScriptRoot
 
 if (-not $env:JAVA_HOME) {

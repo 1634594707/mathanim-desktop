@@ -5,7 +5,10 @@ import com.mathanim.domain.OutputMode;
 import com.mathanim.domain.VideoQuality;
 import org.springframework.stereotype.Service;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,6 +18,11 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
@@ -29,6 +37,7 @@ public class ManimRenderService {
 
   private static final String TEST_SCENE_FILE = "mathanim_builtin_test.py";
   private static final String TEST_SCENE_CLASS = "MathAnimBuiltinTestScene";
+  private static final Pattern MANIM_PROGRESS_PATTERN = Pattern.compile("(\\d{1,3})%");
 
   private static final String TEST_SCENE_SOURCE = """
       from manim import *
@@ -87,7 +96,7 @@ public class ManimRenderService {
   public ManimProcessResult checkVersion() {
     List<String> cmd = new ArrayList<>(manimProperties.getCommandPrefix());
     cmd.add("--version");
-    return runProcess(cmd, Path.of(".").toAbsolutePath(), 60, null);
+    return runProcess(cmd, Path.of(".").toAbsolutePath(), 60, null, null, null);
   }
 
   /**
@@ -101,6 +110,11 @@ public class ManimRenderService {
    * 内置测试渲染；传入 {@code jobId} 时可被 {@link ManimProcessRegistry#destroy(UUID)} 取消。
    */
   public ManimProcessResult renderBuiltinTestScene(UUID jobId) {
+    return renderBuiltinTestScene(jobId, null, null);
+  }
+
+  public ManimProcessResult renderBuiltinTestScene(
+      UUID jobId, Consumer<Integer> progressCallback, BooleanSupplier onTimeoutContinue) {
     Path workDir;
     try {
       Path base = mathanimPaths.cacheRendersBaseDir();
@@ -113,7 +127,14 @@ public class ManimRenderService {
     }
 
     return runManimScene(
-        workDir, TEST_SCENE_FILE, TEST_SCENE_CLASS, jobId, VideoQuality.LOW, OutputMode.VIDEO);
+        workDir,
+        TEST_SCENE_FILE,
+        TEST_SCENE_CLASS,
+        jobId,
+        VideoQuality.LOW,
+        OutputMode.VIDEO,
+        progressCallback,
+        onTimeoutContinue);
   }
 
   /**
@@ -134,7 +155,28 @@ public class ManimRenderService {
       UUID jobId,
       VideoQuality quality,
       OutputMode outputMode) {
-    return runManimScene(workDir, sceneFileName, sceneClassName, jobId, quality, outputMode);
+    return renderSceneInWorkDir(
+        workDir, sceneFileName, sceneClassName, jobId, quality, outputMode, null, null);
+  }
+
+  public ManimProcessResult renderSceneInWorkDir(
+      Path workDir,
+      String sceneFileName,
+      String sceneClassName,
+      UUID jobId,
+      VideoQuality quality,
+      OutputMode outputMode,
+      Consumer<Integer> progressCallback,
+      BooleanSupplier onTimeoutContinue) {
+    return runManimScene(
+        workDir,
+        sceneFileName,
+        sceneClassName,
+        jobId,
+        quality,
+        outputMode,
+        progressCallback,
+        onTimeoutContinue);
   }
 
   private ManimProcessResult runManimScene(
@@ -143,10 +185,20 @@ public class ManimRenderService {
       String sceneClassName,
       UUID jobId,
       VideoQuality quality,
-      OutputMode outputMode) {
+      OutputMode outputMode,
+      Consumer<Integer> progressCallback,
+      BooleanSupplier onTimeoutContinue) {
     List<String> cmd = buildManimCommand(workDir, sceneFileName, sceneClassName, quality, outputMode);
 
-    ManimProcessResult run = runProcess(cmd, workDir, manimProperties.getTimeoutSeconds(), jobId);
+    notifyProgress(progressCallback, 0);
+    ManimProcessResult run =
+        runProcess(
+            cmd,
+            workDir,
+            manimProperties.getTimeoutSeconds(),
+            jobId,
+            progressCallback,
+            onTimeoutContinue);
     if (!run.success()) {
       return run;
     }
@@ -164,6 +216,7 @@ public class ManimRenderService {
             run.stderr(),
             "渲染成功但未在输出目录找到 " + hint + "，请查看上方输出");
       }
+      notifyProgress(progressCallback, 100);
       return new ManimProcessResult(true, 0, run.stdout(), run.stderr(), media.toAbsolutePath().toString());
     } catch (IOException e) {
       return ManimProcessResult.fail(run.exitCode(), run.stdout(), run.stderr(), e.getMessage());
@@ -301,27 +354,56 @@ public class ManimRenderService {
   }
 
   private ManimProcessResult runProcess(
-      List<String> command, Path workingDir, int timeoutSeconds, UUID jobId) {
+      List<String> command,
+      Path workingDir,
+      int timeoutSeconds,
+      UUID jobId,
+      Consumer<Integer> progressCallback,
+      BooleanSupplier onTimeoutContinue) {
     ProcessBuilder pb = new ProcessBuilder(command);
     pb.directory(workingDir.toFile());
-    pb.redirectErrorStream(true);
     try {
       Process p = pb.start();
       if (jobId != null) {
         processRegistry.register(jobId, p);
       }
       try {
-        String out = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-        boolean finished = p.waitFor(timeoutSeconds, TimeUnit.SECONDS);
-        if (!finished) {
-          p.destroyForcibly();
-          return ManimProcessResult.fail(-1, out, "", "进程超时（>" + timeoutSeconds + "s）");
+        AtomicInteger lastProgress = new AtomicInteger(-1);
+        StringBuilder stdout = new StringBuilder();
+        StringBuilder stderr = new StringBuilder();
+        Thread stdoutReader = startStreamCollector(p.getInputStream(), stdout, null, null);
+        Thread stderrReader =
+            startStreamCollector(
+                p.getErrorStream(), stderr, progressCallback, lastProgress);
+
+        long timeoutMillis = TimeUnit.SECONDS.toMillis(timeoutSeconds);
+        long deadline = System.currentTimeMillis() + timeoutMillis;
+        while (true) {
+          long remaining = deadline - System.currentTimeMillis();
+          if (remaining <= 0) {
+            boolean keepWaiting =
+                onTimeoutContinue != null && safeTimeoutDecision(onTimeoutContinue);
+            if (keepWaiting) {
+              deadline = System.currentTimeMillis() + timeoutMillis;
+              continue;
+            }
+            p.destroyForcibly();
+            joinReader(stdoutReader);
+            joinReader(stderrReader);
+            return ManimProcessResult.fail(
+                -1, stdout.toString(), stderr.toString(), "进程超时（>" + timeoutSeconds + "s）");
+          }
+          if (p.waitFor(Math.min(remaining, 1000L), TimeUnit.MILLISECONDS)) {
+            break;
+          }
         }
+        joinReader(stdoutReader);
+        joinReader(stderrReader);
         int code = p.exitValue();
         if (code != 0) {
-          return ManimProcessResult.fail(code, out, "", "exit=" + code);
+          return ManimProcessResult.fail(code, stdout.toString(), stderr.toString(), "exit=" + code);
         }
-        return ManimProcessResult.ok(out, "");
+        return ManimProcessResult.ok(stdout.toString(), stderr.toString());
       } finally {
         if (jobId != null) {
           processRegistry.unregister(jobId);
@@ -332,6 +414,91 @@ public class ManimRenderService {
       return ManimProcessResult.fail(-1, "", "", "interrupted");
     } catch (IOException e) {
       return ManimProcessResult.fail(-1, "", "", e.getMessage() != null ? e.getMessage() : e.toString());
+    }
+  }
+
+  private static Thread startStreamCollector(
+      InputStream stream,
+      StringBuilder sink,
+      Consumer<Integer> progressCallback,
+      AtomicInteger lastProgress) {
+    Thread thread =
+        new Thread(
+            () -> {
+              try (BufferedReader reader =
+                  new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                  appendLine(sink, line);
+                  if (progressCallback != null && lastProgress != null) {
+                    Integer progress = parseManimProgress(line);
+                    if (progress != null && progress > lastProgress.get()) {
+                      lastProgress.set(progress);
+                      notifyProgress(progressCallback, progress);
+                    }
+                  }
+                }
+              } catch (IOException ignored) {
+                // Ignore stream read failures after process termination.
+              }
+            },
+            "manim-stream-reader");
+    thread.setDaemon(true);
+    thread.start();
+    return thread;
+  }
+
+  private static void joinReader(Thread thread) {
+    if (thread == null) {
+      return;
+    }
+    try {
+      thread.join(TimeUnit.SECONDS.toMillis(2));
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+  }
+
+  private static void appendLine(StringBuilder sink, String line) {
+    synchronized (sink) {
+      if (sink.length() > 0) {
+        sink.append(System.lineSeparator());
+      }
+      sink.append(line);
+    }
+  }
+
+  private static Integer parseManimProgress(String line) {
+    if (line == null || line.isBlank()) {
+      return null;
+    }
+    Matcher matcher = MANIM_PROGRESS_PATTERN.matcher(line);
+    Integer progress = null;
+    while (matcher.find()) {
+      int value = Integer.parseInt(matcher.group(1));
+      if (value >= 0 && value <= 100) {
+        progress = value;
+      }
+    }
+    return progress;
+  }
+
+  private static void notifyProgress(Consumer<Integer> progressCallback, int progress) {
+    if (progressCallback == null) {
+      return;
+    }
+    try {
+      progressCallback.accept(progress);
+    } catch (RuntimeException ignored) {
+      // UI callback failures should not abort the render process.
+    }
+  }
+
+  private static boolean safeTimeoutDecision(BooleanSupplier onTimeoutContinue) {
+    try {
+      return onTimeoutContinue.getAsBoolean();
+    } catch (RuntimeException ignored) {
+      return false;
     }
   }
 }

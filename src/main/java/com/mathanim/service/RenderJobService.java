@@ -3,8 +3,11 @@ package com.mathanim.service;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -207,10 +210,19 @@ public class RenderJobService {
    * 对指定任务执行内置测试场景（子进程 Manim），结果写回数据库。
    */
   public void runBuiltinTestAsync(UUID jobId, Consumer<String> log, Runnable onComplete) {
+    runBuiltinTestAsync(jobId, log, null, null, onComplete);
+  }
+
+  public void runBuiltinTestAsync(
+      UUID jobId,
+      Consumer<String> log,
+      Consumer<Integer> progressCallback,
+      BooleanSupplier onTimeoutContinue,
+      Runnable onComplete) {
     manimExecutorService.execute(
         () -> {
           try {
-            runBuiltinTestSync(jobId, log);
+            runBuiltinTestSync(jobId, log, progressCallback, onTimeoutContinue);
           } catch (RuntimeException e) {
             log.accept("异常: " + e.getMessage());
           } finally {
@@ -223,10 +235,20 @@ public class RenderJobService {
    * ManimCat Workflow 对齐：OpenAI 兼容接口生成/修改脚本 → py_compile → manim（需配置 API 密钥）。
    */
   public void runAiWorkflowAsync(UUID jobId, Consumer<String> log, Runnable onComplete) {
+    runAiWorkflowAsync(jobId, log, null, null, onComplete);
+  }
+
+  public void runAiWorkflowAsync(
+      UUID jobId,
+      Consumer<String> log,
+      Consumer<Integer> progressCallback,
+      BooleanSupplier onTimeoutContinue,
+      Runnable onComplete) {
     manimExecutorService.execute(
         () -> {
           try {
-            workflowPipelineService.runAiThenRender(jobId, log);
+            workflowPipelineService.runAiThenRender(
+                jobId, log, progressCallback, onTimeoutContinue);
           } catch (RuntimeException e) {
             log.accept("异常: " + e.getMessage());
           } finally {
@@ -383,6 +405,14 @@ public class RenderJobService {
   }
 
   private void runBuiltinTestSync(UUID jobId, Consumer<String> log) {
+    runBuiltinTestSync(jobId, log, null, null);
+  }
+
+  private void runBuiltinTestSync(
+      UUID jobId,
+      Consumer<String> log,
+      Consumer<Integer> progressCallback,
+      BooleanSupplier onTimeoutContinue) {
     RenderJob job =
         renderJobRepository
             .findById(jobId)
@@ -398,7 +428,8 @@ public class RenderJobService {
     renderJobRepository.save(job);
     log.accept("任务 " + jobId + " 已进入 PROCESSING，开始渲染内置场景…");
 
-    ManimProcessResult r = manimRenderService.renderBuiltinTestScene(jobId);
+    ManimProcessResult r =
+        manimRenderService.renderBuiltinTestScene(jobId, progressCallback, onTimeoutContinue);
     job = renderJobRepository.findById(jobId).orElseThrow();
 
     if (r.success()) {
@@ -465,6 +496,40 @@ public class RenderJobService {
       return searchJobs(keyword);
     }
     return renderJobRepository.searchByKeywordAndStatus(keyword.trim(), status);
+  }
+
+  @Transactional(readOnly = true)
+  public Page<RenderJob> listRecentPaged(Pageable pageable) {
+    return renderJobRepository.findAllByOrderByCreatedAtDesc(pageable);
+  }
+
+  @Transactional(readOnly = true)
+  public Page<RenderJob> searchAndFilterPaged(String keyword, JobStatus status, Pageable pageable) {
+    if ((keyword == null || keyword.isBlank()) && status == null) {
+      return renderJobRepository.findAllByOrderByCreatedAtDesc(pageable);
+    }
+    if (keyword == null || keyword.isBlank()) {
+      return renderJobRepository.findAllByStatus(status, pageable);
+    }
+    if (status == null) {
+      return renderJobRepository.searchByKeywordPaged(keyword.trim(), pageable);
+    }
+    return renderJobRepository.searchByKeywordAndStatusPaged(keyword.trim(), status, pageable);
+  }
+
+  @Transactional(readOnly = true)
+  public long countAll() {
+    return renderJobRepository.count();
+  }
+
+  @Transactional(readOnly = true)
+  public long countByStatus(JobStatus status) {
+    return renderJobRepository.countByStatus(status);
+  }
+
+  @Transactional(readOnly = true)
+  public long countFallback() {
+    return renderJobRepository.countByFallbackModeActive();
   }
 
   @Transactional

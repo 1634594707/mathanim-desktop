@@ -11,8 +11,7 @@ import java.util.concurrent.Executors;
 @EnableConfigurationProperties({
   MathanimRootProperties.class,
   ManimProperties.class,
-  AiProperties.class,
-  DubbingProperties.class
+  AiProperties.class
 })
 public class ManimExecutorConfig {
 

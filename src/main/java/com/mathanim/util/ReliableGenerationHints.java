@@ -9,6 +9,9 @@ public final class ReliableGenerationHints {
   public static final String APPENDIX_ZH =
       "【渲染稳定性约束（必须遵守）】\n"
           + "- 总镜头 <= 6，construct 建议 <= 300 行；讲清核心步骤即可，避免堆砌冗长动画。\n"
+          + "- 视频优先追求“教学清楚 + 画面干净 + 节奏稳定”：每镜只讲一个重点，避免一屏塞满文字和公式。\n"
+          + "- 默认使用高对比、易读字号、稳定布局；关键对象位置尽量固定，减少镜头间突然跳变。\n"
+          + "- 结论、标题、关键量要明确高亮；解释性文字要短句化，避免整段字幕遮挡主体图形。\n"
           + "- 单镜头内同时活跃对象尽量 <= 12；同一时刻并行动画尽量 <= 4。\n"
           + "- 优先使用 Create / FadeIn / FadeOut / Write / Transform / ReplacementTransform / Indicate。\n"
           + "- 非必要不要使用 always_redraw、复杂 updater、ValueTracker 驱动的大量连续重绘、长路径跟踪。\n"
@@ -40,7 +43,8 @@ public final class ReliableGenerationHints {
       String diagnosticHint,
       int pass,
       int maxPasses,
-      boolean fallbackMode) {
+      boolean fallbackMode,
+      boolean repeatedSameError) {
     String base = concept != null ? concept.strip() : "";
     StringBuilder sb = new StringBuilder();
     if (!base.isEmpty()) {
@@ -62,6 +66,11 @@ public final class ReliableGenerationHints {
     if (diagnosticHint != null && !diagnosticHint.isBlank()) {
       sb.append("- 定向修补建议：").append(diagnosticHint.strip()).append("\n");
     }
+    if (repeatedSameError) {
+      sb.append("- 连续两轮出现同类错误，说明原修补思路无效，必须换方案，不能只做局部微调。\n");
+      sb.append("- 必须主动改结构：例如 3D 改 2D、连续动画改静态示意、复杂公式变形改整段高亮。\n");
+      sb.append("- 禁止沿用上一轮失败的对象组织方式、动画编排方式和镜头结构。\n");
+    }
     if (pass >= 2) {
       sb.append("- 当前已进入多轮修补，禁止继续增加新镜头或新特效；只能做收缩和稳态修复。\n");
     }
@@ -81,5 +90,24 @@ public final class ReliableGenerationHints {
     }
     sb.append("- 修补后仍需保持主类名 GeneratedScene，不要输出 markdown。\n");
     return sb.toString();
+  }
+
+  public static String appendRepairHints(
+      String concept,
+      String failureStage,
+      String diagnosticSummary,
+      String diagnosticHint,
+      int pass,
+      int maxPasses,
+      boolean fallbackMode) {
+    return appendRepairHints(
+        concept,
+        failureStage,
+        diagnosticSummary,
+        diagnosticHint,
+        pass,
+        maxPasses,
+        fallbackMode,
+        false);
   }
 }

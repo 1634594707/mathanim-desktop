@@ -42,25 +42,4 @@ public class AppSettingsService {
     return appSettingsRepository.save(s);
   }
 
-  @Transactional
-  public AppSettings saveDubbing(
-      String dubbingMode,
-      String dubbingApiBaseUrl,
-      String dubbingApiKey,
-      String dubbingApiTtsModel,
-      String dubbingApiTtsVoice,
-      String dubbingLocalBaseUrl,
-      String dubbingRefAudioPath,
-      String dubbingFfmpegPath) {
-    AppSettings s = getOrCreate();
-    s.setDubbingMode(dubbingMode);
-    s.setDubbingApiBaseUrl(dubbingApiBaseUrl);
-    s.setDubbingApiKey(dubbingApiKey);
-    s.setDubbingApiTtsModel(dubbingApiTtsModel);
-    s.setDubbingApiTtsVoice(dubbingApiTtsVoice);
-    s.setDubbingLocalBaseUrl(dubbingLocalBaseUrl);
-    s.setDubbingRefAudioPath(dubbingRefAudioPath);
-    s.setDubbingFfmpegPath(dubbingFfmpegPath);
-    return appSettingsRepository.save(s);
-  }
 }

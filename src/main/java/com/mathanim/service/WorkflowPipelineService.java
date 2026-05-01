@@ -14,6 +14,7 @@ import com.mathanim.prompt.PromptOverridesParser;
 import com.mathanim.config.ManimProperties;
 import com.mathanim.repo.RenderJobRepository;
 import com.mathanim.util.ProblemPlanMerge;
+import com.mathanim.util.ErrorFingerprint;
 import com.mathanim.util.ManimFailureDiagnostics;
 import com.mathanim.util.ReferenceImagesParser;
 import com.mathanim.util.ReliableGenerationHints;
@@ -25,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 
 /**
@@ -65,6 +67,14 @@ public class WorkflowPipelineService {
   }
 
   public void runAiThenRender(UUID jobId, Consumer<String> log) {
+    runAiThenRender(jobId, log, null, null);
+  }
+
+  public void runAiThenRender(
+      UUID jobId,
+      Consumer<String> log,
+      Consumer<Integer> progressCallback,
+      BooleanSupplier onTimeoutContinue) {
     RenderJob job =
         renderJobRepository
             .findById(jobId)
@@ -156,6 +166,9 @@ public class WorkflowPipelineService {
     String lastFailureDetail = "";
     String lastFailureSummary = "";
     String lastFailureRepairHint = "";
+    String previousFailureFingerprint = null;
+    String firstFailureFingerprint = null;
+    boolean repeatedSameError = false;
     int renderFailureCount = 0;
 
     for (int pass = 1; pass <= maxPasses; pass++) {
@@ -203,7 +216,8 @@ public class WorkflowPipelineService {
                   lastFailureRepairHint,
                   pass,
                   maxPasses,
-                  fallbackMode);
+                  fallbackMode,
+                  repeatedSameError);
           code =
               manimAiCodeService.repairSceneCode(
                   repairConcept, code, lastFailureStage, lastFailureDetail, promptOverrides);
@@ -240,13 +254,35 @@ public class WorkflowPipelineService {
         lastFailureDetail = compile.message() + "\n" + compile.stdout();
         lastFailureSummary = "静态检查未通过";
         lastFailureRepairHint = "先修正语法、导入和类定义，再考虑动画细节。";
+        String currentFailureFingerprint =
+            ErrorFingerprint.fingerprint(lastFailureStage, lastFailureDetail);
+        if (firstFailureFingerprint == null) {
+          firstFailureFingerprint = currentFailureFingerprint;
+        }
+        repeatedSameError = currentFailureFingerprint.equals(previousFailureFingerprint);
         job = renderJobRepository.findById(jobId).orElseThrow();
         job.setFailureSummary(lastFailureSummary);
         job.setFailureRepairHint(lastFailureRepairHint);
         renderJobRepository.save(job);
+        log.accept("错误指纹: " + currentFailureFingerprint);
+        if (repeatedSameError) {
+          failRepeatedFailure(
+              job,
+              log,
+              "静态检查连续两轮相同错误，AI 无法自动修复此错误。",
+              lastFailureDetail,
+              currentFailureFingerprint);
+          return;
+        }
+        previousFailureFingerprint = currentFailureFingerprint;
         if (pass >= maxPasses) {
           job = renderJobRepository.findById(jobId).orElseThrow();
-          fail(job, "静态检查失败（已达最大轮次）: " + lastFailureDetail);
+          boolean sameAsFirst = currentFailureFingerprint.equals(firstFailureFingerprint);
+          failAtMaxPasses(
+              job,
+              "静态检查失败（已达最大轮次）: " + lastFailureDetail,
+              sameAsFirst,
+              currentFailureFingerprint);
           log.accept(job.getErrorMessage());
           return;
         }
@@ -288,7 +324,9 @@ public class WorkflowPipelineService {
               ManimRenderService.GENERATED_SCENE_CLASS,
               jobId,
               job.getVideoQuality(),
-              job.getOutputMode());
+              job.getOutputMode(),
+              progressCallback,
+              onTimeoutContinue);
 
       if (render.success()) {
         job = renderJobRepository.findById(jobId).orElseThrow();
@@ -328,18 +366,37 @@ public class WorkflowPipelineService {
       renderFailureCount++;
       lastFailureSummary = diag.summary();
       lastFailureRepairHint = diag.repairHint();
+      String currentFailureFingerprint =
+          ErrorFingerprint.fingerprint(lastFailureStage, lastFailureDetail);
+      if (firstFailureFingerprint == null) {
+        firstFailureFingerprint = currentFailureFingerprint;
+      }
+      repeatedSameError = currentFailureFingerprint.equals(previousFailureFingerprint);
       job = renderJobRepository.findById(jobId).orElseThrow();
       job.setFailureSummary(lastFailureSummary);
       job.setFailureRepairHint(lastFailureRepairHint);
       renderJobRepository.save(job);
+      log.accept("错误指纹: " + currentFailureFingerprint);
       log.accept("失败诊断: " + diag.summary());
       log.accept("修补方向: " + diag.repairHint());
+      if (repeatedSameError) {
+        failRepeatedFailure(
+            job,
+            log,
+            "连续两轮出现同类渲染错误，AI 无法自动修复此错误。",
+            lastFailureDetail,
+            currentFailureFingerprint);
+        return;
+      }
+      previousFailureFingerprint = currentFailureFingerprint;
       if (pass >= maxPasses) {
         job = renderJobRepository.findById(jobId).orElseThrow();
-        job.setStatus(JobStatus.FAILED);
-        job.setErrorMessage(trim(diag.summary() + "\n" + lastFailureDetail, 4000));
-        job.setProcessingStage(ProcessingStage.NONE);
-        renderJobRepository.save(job);
+        boolean sameAsFirst = currentFailureFingerprint.equals(firstFailureFingerprint);
+        failAtMaxPasses(
+            job,
+            diag.summary() + "\n" + lastFailureDetail,
+            sameAsFirst,
+            currentFailureFingerprint);
         log.accept("渲染失败（已达最大轮次）: " + render.message());
         if (!render.stdout().isBlank()) {
           log.accept(trim(render.stdout(), 6000));
@@ -368,6 +425,34 @@ public class WorkflowPipelineService {
   private boolean isUserCancelled(RenderJob j) {
     return j.getStatus() == JobStatus.FAILED
         && RenderJob.USER_CANCELLED_MESSAGE.equals(j.getErrorMessage());
+  }
+
+  private void failRepeatedFailure(
+      RenderJob job,
+      Consumer<String> log,
+      String summary,
+      String detail,
+      String fingerprint) {
+    job = renderJobRepository.findById(job.getId()).orElseThrow();
+    job.setStatus(JobStatus.FAILED);
+    job.setFailureSummary("AI 无法自动修复此错误");
+    job.setFailureRepairHint("连续两轮错误指纹相同，建议手动修改脚本或明显简化方案后再试。");
+    job.setErrorMessage(trim(summary + "\n错误指纹: " + fingerprint + "\n" + detail, 4000));
+    job.setProcessingStage(ProcessingStage.NONE);
+    renderJobRepository.save(job);
+    log.accept(summary);
+  }
+
+  private void failAtMaxPasses(
+      RenderJob job, String detail, boolean sameAsFirst, String fingerprint) {
+    job.setStatus(JobStatus.FAILED);
+    job.setErrorMessage(trim(detail + "\n错误指纹: " + fingerprint, 4000));
+    job.setProcessingStage(ProcessingStage.NONE);
+    if (sameAsFirst) {
+      job.setFailureSummary("首尾轮错误一致");
+      job.setFailureRepairHint("首轮与末轮错误指纹相同，可能需要手动修改脚本或重写分镜结构。");
+    }
+    renderJobRepository.save(job);
   }
 
   private void fail(RenderJob job, String message) {

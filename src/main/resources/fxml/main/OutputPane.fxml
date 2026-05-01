@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.media.MediaView?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.mathanim.ui.OutputController"
+            styleClass="output-pane" minWidth="460">
+  <center>
+    <ScrollPane fitToWidth="true" styleClass="output-scroll" hbarPolicy="NEVER" VBox.vgrow="ALWAYS">
+      <VBox spacing="10">
+        <padding>
+          <Insets bottom="12" left="0" right="0" top="0"/>
+        </padding>
+        <VBox spacing="10">
+          <HBox styleClass="output-status-bar" alignment="CENTER_LEFT">
+            <padding>
+              <Insets bottom="0" left="16" right="16" top="16"/>
+            </padding>
+            <Label fx:id="outputStatusLabel" text="等待输出" styleClass="output-status-title"/>
+            <Label fx:id="outputFallbackBadgeLabel" text="保底模式中"
+                   visible="false" managed="false"
+                   styleClass="output-status-badge,output-status-badge-fallback"/>
+            <Region HBox.hgrow="ALWAYS"/>
+          </HBox>
+          <HBox fx:id="outputProgressBox" alignment="CENTER_LEFT" spacing="10" visible="false" managed="false">
+            <padding>
+              <Insets bottom="0" left="16" right="16" top="0"/>
+            </padding>
+            <Label fx:id="outputProgressLabel" text="准备渲染" styleClass="zen-hint" minWidth="86"/>
+            <ProgressBar fx:id="outputProgressBar" progress="-1.0" HBox.hgrow="ALWAYS"/>
+          </HBox>
+          <VBox styleClass="output-summary-card" spacing="8">
+            <padding>
+              <Insets bottom="4" left="14" right="14" top="0"/>
+            </padding>
+            <HBox spacing="10" alignment="CENTER_LEFT">
+              <VBox styleClass="output-summary-pill" HBox.hgrow="ALWAYS">
+                <Label text="当前焦点" styleClass="output-summary-caption"/>
+                <Label fx:id="outputSummaryStateLabel" text="等待输出" styleClass="output-summary-value"/>
+              </VBox>
+              <VBox styleClass="output-summary-pill,output-summary-pill-compact">
+                <Label text="任务数" styleClass="output-summary-caption"/>
+                <Label fx:id="outputSummaryCountLabel" text="00" styleClass="output-summary-value"/>
+              </VBox>
+            </HBox>
+            <VBox styleClass="output-summary-pill">
+              <Label text="下一步" styleClass="output-summary-caption"/>
+              <Label fx:id="outputSummaryNextStepLabel" text="从左侧填写内容并开始生成" styleClass="output-summary-value,output-summary-value-soft" wrapText="true"/>
+            </VBox>
+          </VBox>
+        </VBox>
+        <VBox spacing="8" styleClass="output-preview-column" minHeight="220">
+          <padding>
+            <Insets bottom="6" left="14" right="14" top="4"/>
+          </padding>
+          <HBox alignment="CENTER_LEFT" spacing="10">
+            <Label text="预览" styleClass="zen-micro-heading"/>
+            <Label fx:id="outputPreviewPathLabel" styleClass="zen-hint" wrapText="true" maxWidth="320"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="outputPreviewFullscreenButton" text="全屏" focusTraversable="false"
+                    onAction="#onOutputPreviewFullscreen" styleClass="button,btn-zen-outline" disable="true"/>
+          </HBox>
+          <Label text="双击预览区全屏 · Esc 退出" styleClass="zen-hint-subtle" wrapText="true"/>
+          <StackPane fx:id="outputPreviewStack" minHeight="180" prefHeight="320" styleClass="output-preview-stack" VBox.vgrow="ALWAYS">
+            <ScrollPane fx:id="outputImageScroll" fitToWidth="true" fitToHeight="true"
+                        styleClass="output-image-scroll" visible="false" managed="false">
+              <ImageView fx:id="outputImageView" preserveRatio="true" smooth="true"/>
+            </ScrollPane>
+            <MediaView fx:id="outputMediaView" preserveRatio="true"/>
+            <Label fx:id="outputPreviewPlaceholder"
+                   text="在下方选中已完成的任务，即可预览 mp4 / png"
+                   styleClass="zen-hint" wrapText="true" textAlignment="CENTER" maxWidth="360"/>
+          </StackPane>
+          <VBox fx:id="outputVideoTransport" spacing="4" visible="false" managed="false" styleClass="output-video-transport">
+            <HBox alignment="CENTER_LEFT" spacing="10">
+              <Button fx:id="outputPreviewPlayToggle" focusTraversable="false" text="暂停"
+                      onAction="#onPreviewPlayToggle" styleClass="button,btn-zen-ghost" disable="true"
+                      minWidth="52"/>
+              <Slider fx:id="outputPreviewSeek" styleClass="output-preview-seek" min="0" max="1" value="0"
+                      blockIncrement="0.5" HBox.hgrow="ALWAYS"/>
+              <Label fx:id="outputPreviewTimeLabel" text="0:00 / 0:00" styleClass="zen-hint"
+                     minWidth="100"/>
+            </HBox>
+          </VBox>
+          <VBox fx:id="outputFailureCard" spacing="6" visible="false" managed="false" styleClass="output-failure-card">
+            <HBox alignment="CENTER_LEFT" spacing="8">
+              <Label text="失败诊断" styleClass="zen-micro-heading"/>
+              <Region HBox.hgrow="ALWAYS"/>
+              <Label fx:id="outputFailureMetaLabel" text="" styleClass="output-failure-meta" wrapText="true"/>
+            </HBox>
+            <Label fx:id="outputFailureSummaryLabel"
+                   text="当前任务的失败原因与补救建议会显示在这里"
+                   styleClass="output-failure-text" wrapText="true" maxWidth="720"/>
+          </VBox>
+        </VBox>
+        <VBox spacing="8" styleClass="output-log-wrap" minHeight="140">
+          <padding>
+            <Insets bottom="10" left="14" right="14" top="10"/>
+          </padding>
+          <HBox alignment="CENTER_LEFT" spacing="10">
+            <Label text="日志" styleClass="zen-micro-heading"/>
+            <Label text="当前选中任务 / 未选中时显示本次会话日志" styleClass="zen-hint" wrapText="true"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="复制" focusTraversable="false" onAction="#onCopyOutputLog"
+                    styleClass="button,btn-zen-ghost"/>
+            <Button text="清空" focusTraversable="false" onAction="#onClearOutputLog"
+                    styleClass="button,btn-zen-ghost"/>
+          </HBox>
+          <TextArea fx:id="outputLogArea" editable="false" wrapText="true" prefRowCount="7"
+                    minHeight="96" promptText="运行日志会显示在这里" styleClass="log-view" VBox.vgrow="ALWAYS"/>
+        </VBox>
+        <fx:include fx:id="historyPane" source="HistoryPane.fxml"/>
+      </VBox>
+    </ScrollPane>
+  </center>
+</BorderPane>

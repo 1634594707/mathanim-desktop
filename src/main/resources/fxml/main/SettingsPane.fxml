@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.mathanim.ui.SettingsController"
+            fitToWidth="true" styleClass="settings-scroll" hbarPolicy="NEVER">
+  <VBox spacing="18">
+    <padding>
+      <Insets bottom="28" left="28" right="28" top="24"/>
+    </padding>
+    <VBox styleClass="settings-section-card" spacing="12" maxWidth="720">
+      <HBox alignment="CENTER_LEFT">
+        <Label text="运行环境" styleClass="zen-section-title"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label text="Base URL / Key / Model" styleClass="zen-section-tag"/>
+      </HBox>
+      <GridPane hgap="14" vgap="14">
+        <columnConstraints>
+          <ColumnConstraints minWidth="120" prefWidth="128" hgrow="NEVER"/>
+          <ColumnConstraints hgrow="ALWAYS" minWidth="240"/>
+        </columnConstraints>
+        <Label text="Base URL" styleClass="zen-form-label" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+        <TextField fx:id="settingsBaseUrl" GridPane.columnIndex="1" GridPane.rowIndex="0" maxWidth="Infinity"/>
+        <Label text="API Key" styleClass="zen-form-label" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+        <PasswordField fx:id="settingsApiKey" GridPane.columnIndex="1" GridPane.rowIndex="1" maxWidth="Infinity"/>
+        <Label text="Model" styleClass="zen-form-label" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+        <TextField fx:id="settingsModel" GridPane.columnIndex="1" GridPane.rowIndex="2" maxWidth="Infinity"/>
+      </GridPane>
+      <Label text="支持 OpenAI 兼容接口。这里只改模型连接，不影响创作页工作流。" styleClass="zen-hint" wrapText="true"/>
+    </VBox>
+    <VBox styleClass="settings-section-card" spacing="12" maxWidth="720">
+      <HBox alignment="CENTER_LEFT">
+        <Label text="运行环境" styleClass="zen-section-title"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label text="连接验证" styleClass="zen-section-tag"/>
+      </HBox>
+      <GridPane hgap="14" vgap="14">
+        <columnConstraints>
+          <ColumnConstraints minWidth="120" prefWidth="128" hgrow="NEVER"/>
+          <ColumnConstraints hgrow="ALWAYS" minWidth="240"/>
+        </columnConstraints>
+        <Label text="修补轮次" styleClass="zen-form-label" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+        <TextField fx:id="settingsMaxRetry" GridPane.columnIndex="1" GridPane.rowIndex="3" prefWidth="100" maxWidth="140" promptText="空 = yml"/>
+        <Label text="Python" styleClass="zen-form-label" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+        <TextField fx:id="settingsPython" GridPane.columnIndex="1" GridPane.rowIndex="4" maxWidth="Infinity"
+                   promptText="与 Manim 同环境"/>
+      </GridPane>
+      <Label text="留空时优先使用 application.yml。建议填写当前桌面环境里可直接调用的 Python。" styleClass="zen-hint" wrapText="true"/>
+    </VBox>
+    <VBox styleClass="settings-section-card" spacing="12" maxWidth="720">
+      <HBox alignment="CENTER_LEFT">
+        <Label text="保存与测试" styleClass="zen-section-title"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label text="连接验证" styleClass="zen-section-tag"/>
+      </HBox>
+      <Label text="先保存，再测试 AI 连接。测试只验证文本返回，不代表视觉模型一定可用。" styleClass="zen-hint" wrapText="true"/>
+      <HBox spacing="12" alignment="CENTER_LEFT">
+        <Button text="保存" onAction="#onSaveSettings" styleClass="button,btn-zen-primary"/>
+        <Button text="重新加载" onAction="#onReloadSettings" styleClass="button,btn-zen-outline"/>
+        <Button fx:id="settingsTestAiButton" text="测试连接" onAction="#onTestAiConnection" styleClass="button,btn-zen-outline"/>
+      </HBox>
+    </VBox>
+  </VBox>
+</ScrollPane>

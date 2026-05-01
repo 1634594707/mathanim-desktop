@@ -7,12 +7,17 @@ spring:
     driver-class-name: org.sqlite.JDBC
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: false
     properties:
       hibernate:
         format_sql: true
     database-platform: org.hibernate.community.dialect.SQLiteDialect
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 1
 
 mathanim:
   # 数据根目录：SQLite、默认 <data-dir>/jobs、cache/renders 等。迁出 C 盘时改此绝对路径。
@@ -56,15 +61,6 @@ mathanim:
     jobs-base-dir: ""
     # 渲染成功后复制 {jobId}.mp4/png 到此目录，任务列表与日志中的路径指向该文件，便于直接打开验证
     export-media-dir: "d:/Administrator/Desktop/MathAnim/mathanim-desktop/generated-videos"
-  # 一键配音：云端为 OpenAI 兼容 POST {api-base-url}/audio/speech；本地为 IndexTTS2 POST {local-base-url}/tts
-  dubbing:
-    api-base-url: https://api.openai.com/v1
-    api-key: ""
-    api-tts-model: tts-1
-    api-tts-voice: nova
-    local-base-url: http://127.0.0.1:9880
-    local-ref-audio-path: ""
-    ffmpeg-path: ffmpeg
 
 logging:
   level:

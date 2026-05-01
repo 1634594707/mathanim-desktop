@@ -236,10 +236,10 @@ public class OpenAiChatClient {
 
     try {
       JsonNode tree = objectMapper.readTree(response.body());
-      JsonNode message = tree.path("choices").path(0).path("message");
-      String text = AiResponseText.extractAssistantText(message);
+      String text = AiResponseText.extractTextFromChatCompletionRoot(tree);
       if (text == null || text.isBlank()) {
-        throw new IllegalStateException("AI 响应无有效文本内容");
+        throw new IllegalStateException(
+            "AI 响应无有效文本内容，响应摘要: " + truncate(response.body(), 1200));
       }
       return text;
     } catch (com.fasterxml.jackson.core.JsonProcessingException e) {

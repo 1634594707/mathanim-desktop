@@ -7,17 +7,24 @@
 .vscode/
 .DS_Store
 Thumbs.db
+Desktop.ini
 
 # Logs / local
 *.log
 *.tmp
+*.out
 
 # Python / local data
 __pycache__/
 *.pyc
 .mathanim/
 *.db
+*.sqlite
+*.sqlite3
 
-# Large example renders (optional: remove this line to track)
+# Generated media / caches
 examples/manim/ai-reference/output/
 generated-videos/
+media/
+**/media/
+**/__pycache__/

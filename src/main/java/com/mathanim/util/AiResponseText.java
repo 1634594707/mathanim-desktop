@@ -11,8 +11,52 @@ public final class AiResponseText {
     if (message == null || message.isMissingNode()) {
       return "";
     }
-    JsonNode content = message.get("content");
-    if (content == null || content.isNull()) {
+    String contentText = extractNodeText(message.get("content"));
+    if (!contentText.isBlank()) {
+      return contentText;
+    }
+    String reasoningText = extractNodeText(message.get("reasoning_content"));
+    if (!reasoningText.isBlank()) {
+      return reasoningText;
+    }
+    return extractNodeText(message.get("text"));
+  }
+
+  public static String extractTextFromChatCompletionRoot(JsonNode root) {
+    if (root == null || root.isMissingNode()) {
+      return "";
+    }
+    String fromChoiceMessage = extractAssistantText(root.path("choices").path(0).path("message"));
+    if (!fromChoiceMessage.isBlank()) {
+      return fromChoiceMessage;
+    }
+    String fromChoiceText = extractNodeText(root.path("choices").path(0).get("text"));
+    if (!fromChoiceText.isBlank()) {
+      return fromChoiceText;
+    }
+    String outputText = extractNodeText(root.get("output_text"));
+    if (!outputText.isBlank()) {
+      return outputText;
+    }
+    JsonNode output = root.get("output");
+    if (output != null && output.isArray()) {
+      StringBuilder sb = new StringBuilder();
+      for (JsonNode item : output) {
+        String itemText = extractNodeText(item.get("content"));
+        if (!itemText.isBlank()) {
+          if (sb.length() > 0) {
+            sb.append('\n');
+          }
+          sb.append(itemText);
+        }
+      }
+      return sb.toString().strip();
+    }
+    return "";
+  }
+
+  private static String extractNodeText(JsonNode content) {
+    if (content == null || content.isNull() || content.isMissingNode()) {
       return "";
     }
     if (content.isTextual()) {
@@ -21,11 +65,29 @@ public final class AiResponseText {
     if (content.isArray()) {
       StringBuilder sb = new StringBuilder();
       for (JsonNode part : content) {
-        if (part.path("type").asText().equals("text")) {
-          sb.append(part.path("text").asText(""));
+        String type = part.path("type").asText("");
+        if ("text".equals(type) || "output_text".equals(type) || type.isBlank()) {
+          String partText = extractNodeText(part.get("text"));
+          if (partText.isBlank()) {
+            partText = extractNodeText(part.get("content"));
+          }
+          if (!partText.isBlank()) {
+            sb.append(partText);
+          }
         }
       }
       return sb.toString().strip();
+    }
+    if (content.isObject()) {
+      if (content.hasNonNull("value")) {
+        return extractNodeText(content.get("value"));
+      }
+      if (content.hasNonNull("text")) {
+        return extractNodeText(content.get("text"));
+      }
+      if (content.hasNonNull("content")) {
+        return extractNodeText(content.get("content"));
+      }
     }
     return "";
   }

@@ -30,31 +30,6 @@ public class AppSettings {
   @Column(length = 256)
   private String pythonExecutable;
 
-  /** 配音：API 或 LOCAL，空则使用 yml 默认。 */
-  @Column(length = 16)
-  private String dubbingMode;
-
-  @Column(length = 512)
-  private String dubbingApiBaseUrl;
-
-  @Column(length = 2048)
-  private String dubbingApiKey;
-
-  @Column(length = 128)
-  private String dubbingApiTtsModel;
-
-  @Column(length = 64)
-  private String dubbingApiTtsVoice;
-
-  @Column(length = 512)
-  private String dubbingLocalBaseUrl;
-
-  @Column(length = 1024)
-  private String dubbingRefAudioPath;
-
-  @Column(length = 512)
-  private String dubbingFfmpegPath;
-
   public Long getId() {
     return id;
   }
@@ -101,69 +76,5 @@ public class AppSettings {
 
   public void setPythonExecutable(String pythonExecutable) {
     this.pythonExecutable = pythonExecutable;
-  }
-
-  public String getDubbingMode() {
-    return dubbingMode;
-  }
-
-  public void setDubbingMode(String dubbingMode) {
-    this.dubbingMode = dubbingMode;
-  }
-
-  public String getDubbingApiBaseUrl() {
-    return dubbingApiBaseUrl;
-  }
-
-  public void setDubbingApiBaseUrl(String dubbingApiBaseUrl) {
-    this.dubbingApiBaseUrl = dubbingApiBaseUrl;
-  }
-
-  public String getDubbingApiKey() {
-    return dubbingApiKey;
-  }
-
-  public void setDubbingApiKey(String dubbingApiKey) {
-    this.dubbingApiKey = dubbingApiKey;
-  }
-
-  public String getDubbingApiTtsModel() {
-    return dubbingApiTtsModel;
-  }
-
-  public void setDubbingApiTtsModel(String dubbingApiTtsModel) {
-    this.dubbingApiTtsModel = dubbingApiTtsModel;
-  }
-
-  public String getDubbingApiTtsVoice() {
-    return dubbingApiTtsVoice;
-  }
-
-  public void setDubbingApiTtsVoice(String dubbingApiTtsVoice) {
-    this.dubbingApiTtsVoice = dubbingApiTtsVoice;
-  }
-
-  public String getDubbingLocalBaseUrl() {
-    return dubbingLocalBaseUrl;
-  }
-
-  public void setDubbingLocalBaseUrl(String dubbingLocalBaseUrl) {
-    this.dubbingLocalBaseUrl = dubbingLocalBaseUrl;
-  }
-
-  public String getDubbingRefAudioPath() {
-    return dubbingRefAudioPath;
-  }
-
-  public void setDubbingRefAudioPath(String dubbingRefAudioPath) {
-    this.dubbingRefAudioPath = dubbingRefAudioPath;
-  }
-
-  public String getDubbingFfmpegPath() {
-    return dubbingFfmpegPath;
-  }
-
-  public void setDubbingFfmpegPath(String dubbingFfmpegPath) {
-    this.dubbingFfmpegPath = dubbingFfmpegPath;
   }
 }

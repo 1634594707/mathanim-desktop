@@ -38,4 +38,14 @@ class ReliableGenerationHintsTest {
     assertTrue(s.contains("<= 3 个镜头"));
     assertTrue(s.contains("极简教学版"));
   }
+
+  @Test
+  void repeatedSameErrorAddsChangeDirectionGuidance() {
+    String s =
+        ReliableGenerationHints.appendRepairHints(
+            "topic", "manim_render", "场景过重", "改成静态图", 3, 4, false, true);
+    assertTrue(s.contains("连续两轮出现同类错误"));
+    assertTrue(s.contains("必须换方案"));
+    assertTrue(s.contains("3D 改 2D"));
+  }
 }

@@ -1,24 +1,24 @@
-/* MathAnim 桌面端 — 品牌灵感：ManimCat public/logo.svg（#faf9f5 暖纸、#455a64 板岩）+ Golutra any-cli（暖橙渐变、大圆角块衬底） */
-/* UI 字体：正文/多行输入用霞鹜文楷屏幕 GB（LXGWWenKaiGBScreen.ttf，SIL OFL）；控件与全大写标签用 Inter；等宽：JetBrains Mono */
-/* 字阶（参考 golutra titlebar / ManimCat 变量 / IDE Tab）：
-     12–12.5 导航与小标题 · 11 正文辅助 · 10 标签/大写轨 · 9 次标签；中文仍靠 Microsoft YaHei UI 回退 */
-/* 按钮动效：JavaFX 无 transition，使用 hover 轻抬起 + pressed 微缩放，语义近似 golutra 120ms ease 的瞬时反馈 */
+/* MathAnim 桌面端 — 有机数学美学：温暖纸张质感 + 手写数学符号 + 柔和渐变 */
+/* 设计理念：将数学的精确性与自然的有机感相结合，创造既专业又富有创意的教育工具界面 */
+/* 色彩系统：暖纸色基底 + 板岩色主调 + 琥珀色点缀 + 翡翠绿成功态 */
+/* 字体：霞鹜文楷屏幕 GB（正文） + Inter（控件） + JetBrains Mono（等宽） */
 
 .mathanim-root {
   -fx-font-family: "LXGW WenKai GB Screen", "LXGW WenKai Screen", "Inter", "Inter Variable", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif;
   -fx-font-size: 13px;
-  -fx-background-color: #faf9f5;
+  -fx-background-color: linear-gradient(to bottom, #faf9f5 0%, #f5f2ea 100%);
   -fx-text-fill: #37474f;
-  -fx-focus-color: #455a64;
-  -fx-faint-focus-color: rgba(69, 90, 100, 0.28);
+  -fx-focus-color: #5d7b8a;
+  -fx-faint-focus-color: rgba(93, 123, 138, 0.32);
 }
 
 /* —— 无系统标题栏时的自定义顶栏（与画布同色） —— */
 .window-chrome {
-  -fx-background-color: #faf9f5;
-  -fx-border-color: rgba(69, 90, 100, 0.1);
+  -fx-background-color: linear-gradient(to right, #faf9f5 0%, #f8f6f0 100%);
+  -fx-border-color: rgba(69, 90, 100, 0.12);
   -fx-border-width: 0 0 1 0;
-  -fx-min-height: 40;
+  -fx-min-height: 44;
+  -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.04), 8, 0.2, 0, 2);
 }
 
 .window-title {
@@ -100,146 +100,155 @@
 
 /* —— 顶栏字标（矢量标记在 FXML，此处置色） —— */
 .brand-mark-wrap {
-  -fx-effect: dropshadow(gaussian, rgba(69, 90, 100, 0.12), 8, 0.2, 0, 2);
+  -fx-effect: dropshadow(gaussian, rgba(69, 90, 100, 0.15), 10, 0.25, 0, 3);
 }
 
 .brand-mark-paper {
-  -fx-background-color: #faf9f5;
-  -fx-background-radius: 12;
-  -fx-border-color: #cfd8dc;
-  -fx-border-radius: 12;
+  -fx-background-color: linear-gradient(to bottom right, #ffffff 0%, #faf9f5 100%);
+  -fx-background-radius: 14;
+  -fx-border-color: linear-gradient(to bottom right, #e0e0e0 0%, #cfd8dc 100%);
+  -fx-border-radius: 14;
   -fx-border-width: 1;
 }
 
 /*
  * MathAnim 矢量标：π + 播放三角（FXML: brand-mark-pi / brand-mark-play）
- * —— 改色：可换纯色，或保留 linear-gradient 做蓝→青渐变（参考你提供的 Logo）
+ * 有机数学风格：蓝→青渐变，象征数学的精确与自然的流动
  */
 .brand-mark-pi {
-  /* 纯色示例：-fx-fill: #1565c0; */
-  -fx-fill: linear-gradient(from 0% 0% to 100% 0%, #1565c0 0%, #00838f 100%);
+  -fx-fill: linear-gradient(from 0% 0% to 100% 100%, #1565c0 0%, #00838f 50%, #00695c 100%);
 }
 
 .brand-mark-play {
-  /* 三角略亮于 π，可改成与 π 同色以统一 */
-  -fx-fill: linear-gradient(from 0% 0% to 100% 0%, #1e88e5 0%, #00bcd4 100%);
+  -fx-fill: linear-gradient(from 0% 0% to 100% 100%, #1e88e5 0%, #00bcd4 50%, #26a69a 100%);
 }
 
 .brand-mark-wrap:hover .brand-mark-pi {
-  -fx-fill: linear-gradient(from 0% 0% to 100% 0%, #1976d2 0%, #0097a7 100%);
+  -fx-fill: linear-gradient(from 0% 0% to 100% 100%, #1976d2 0%, #0097a7 50%, #00796b 100%);
 }
 
 .brand-mark-wrap:hover .brand-mark-play {
-  -fx-fill: linear-gradient(from 0% 0% to 100% 0%, #2196f3 0%, #26c6da 100%);
+  -fx-fill: linear-gradient(from 0% 0% to 100% 100%, #2196f3 0%, #26c6da 50%, #4db6ac 100%);
 }
 
 .brand-wordmark {
-  -fx-font-size: 17px;
-  -fx-font-weight: 600;
-  -fx-text-fill: #455a64;
-  -fx-letter-spacing: 0.02em;
+  -fx-font-size: 18px;
+  -fx-font-weight: 700;
+  -fx-text-fill: linear-gradient(to right, #37474f 0%, #455a64 100%);
+  -fx-letter-spacing: 0.03em;
 }
 
 .brand-tagline {
   -fx-font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif;
-  -fx-font-size: 9px;
-  -fx-font-weight: 500;
-  -fx-letter-spacing: 0.22em;
-  -fx-text-fill: #78909c;
+  -fx-font-size: 9.5px;
+  -fx-font-weight: 600;
+  -fx-letter-spacing: 0.24em;
+  -fx-text-fill: #90a4af;
 }
 
 /* —— Tab —— */
 .zen-tab-pane {
-  -fx-background-color: #faf9f5;
+  -fx-background-color: linear-gradient(to bottom, #faf9f5 0%, #f5f2ea 100%);
 }
 
 .zen-tab-pane .tab-header-area {
-  -fx-padding: 0 16 0 16;
-  -fx-background-color: #faf9f5;
-  -fx-border-color: rgba(69, 90, 100, 0.08);
+  -fx-padding: 0 20 0 20;
+  -fx-background-color: linear-gradient(to right, #faf9f5 0%, #f8f6f0 100%);
+  -fx-border-color: rgba(69, 90, 100, 0.1);
   -fx-border-width: 0 0 1 0;
 }
 
 .zen-tab-pane .tab-header-area .tab {
   -fx-background-color: transparent;
   -fx-border-color: transparent;
-  -fx-padding: 14 20 12 20;
+  -fx-padding: 16 24 14 24;
+  -fx-background-radius: 8 8 0 0;
+}
+
+.zen-tab-pane .tab-header-area .tab:hover {
+  -fx-background-color: rgba(69, 90, 100, 0.04);
 }
 
 .zen-tab-pane .tab-header-area .tab:hover .tab-label {
-  -fx-text-fill: #666666;
+  -fx-text-fill: #546e7a;
 }
 
 .zen-tab-pane .tab-header-area .tab .tab-label {
   -fx-font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif;
-  -fx-font-size: 11.5px;
+  -fx-font-size: 12px;
   -fx-font-weight: 600;
-  -fx-letter-spacing: 0.08em;
-  -fx-text-fill: #888888;
+  -fx-letter-spacing: 0.1em;
+  -fx-text-fill: #90a4af;
 }
 
 .zen-tab-pane .tab-header-area .tab:selected {
-  -fx-border-color: transparent transparent #455a64 transparent;
-  -fx-border-width: 0 0 2 0;
+  -fx-background-color: rgba(69, 90, 100, 0.06);
+  -fx-border-color: transparent transparent #5d7b8a transparent;
+  -fx-border-width: 0 0 3 0;
 }
 
 .zen-tab-pane .tab-header-area .tab:selected .tab-label {
-  -fx-text-fill: #455a64;
+  -fx-text-fill: #37474f;
+  -fx-font-weight: 700;
 }
 
 .zen-tab-pane .tab-content-area {
-  -fx-background-color: #faf9f5;
+  -fx-background-color: linear-gradient(to bottom, #faf9f5 0%, #f5f2ea 100%);
 }
 
 /* —— 横向分栏 —— */
 .zen-split {
-  -fx-background-color: #faf9f5;
+  -fx-background-color: linear-gradient(to bottom, #faf9f5 0%, #f5f2ea 100%);
   -fx-padding: 0;
 }
 
 .zen-split > .split-pane-divider {
-  -fx-background-color: rgba(69, 90, 100, 0.12);
+  -fx-background-color: linear-gradient(to bottom, rgba(69, 90, 100, 0.08) 0%, rgba(69, 90, 100, 0.15) 50%, rgba(69, 90, 100, 0.08) 100%);
   /* 加宽可拖拽命中区，便于发现「可调整左右栏比例」 */
-  -fx-padding: 0 5 0 5;
+  -fx-padding: 0 6 0 6;
 }
 
 .zen-split > .split-pane-divider:hover {
-  -fx-background-color: rgba(69, 90, 100, 0.22);
+  -fx-background-color: linear-gradient(to bottom, rgba(93, 123, 138, 0.15) 0%, rgba(93, 123, 138, 0.25) 50%, rgba(93, 123, 138, 0.15) 100%);
 }
 
 .zen-split > .split-pane-divider:pressed {
-  -fx-background-color: rgba(255, 112, 67, 0.35);
+  -fx-background-color: linear-gradient(to bottom, rgba(255, 138, 101, 0.25) 0%, rgba(255, 112, 67, 0.4) 50%, rgba(255, 138, 101, 0.25) 100%);
 }
 
 /* —— 左栏 STUDIO —— */
 .studio-left {
-  -fx-background-color: #faf9f5;
-  -fx-border-color: rgba(69, 90, 100, 0.1);
+  -fx-background-color: linear-gradient(to bottom, #faf9f5 0%, #f8f6f0 100%);
+  -fx-border-color: rgba(69, 90, 100, 0.12);
   -fx-border-width: 0 1 0 0;
 }
 
 .studio-header {
-  -fx-padding: 14 16 10 16;
+  -fx-padding: 18 20 14 20;
   -fx-alignment: center-left;
+  -fx-background-color: linear-gradient(to bottom, rgba(255, 255, 255, 0.6) 0%, transparent 100%);
 }
 
 .studio-meta {
   -fx-font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif;
-  -fx-font-size: 10px;
-  -fx-letter-spacing: 0.14em;
-  -fx-text-fill: #90a4af;
+  -fx-font-size: 10.5px;
+  -fx-letter-spacing: 0.16em;
+  -fx-text-fill: #b0bec5;
+  -fx-font-weight: 500;
 }
 
 .studio-ready {
-  -fx-padding: 10 16 12 16;
-  -fx-border-color: rgba(69, 90, 100, 0.08);
+  -fx-padding: 12 20 14 20;
+  -fx-border-color: rgba(69, 90, 100, 0.1);
   -fx-border-width: 0 0 1 0;
+  -fx-background-color: linear-gradient(to right, rgba(93, 123, 138, 0.04) 0%, transparent 100%);
 }
 
 .studio-ready-flow {
-  -fx-font-size: 11px;
-  -fx-text-fill: #78909c;
+  -fx-font-size: 11.5px;
+  -fx-text-fill: #607d8b;
   -fx-wrap-text: true;
+  -fx-font-weight: 500;
 }
 
 .studio-scroll {
@@ -252,69 +261,84 @@
 }
 
 .studio-footer {
-  -fx-padding: 10 14 12 14;
-  -fx-border-color: rgba(69, 90, 100, 0.1);
+  -fx-padding: 12 16 14 16;
+  -fx-border-color: rgba(69, 90, 100, 0.12);
   -fx-border-width: 1 0 0 0;
-  -fx-background-color: #faf9f5;
+  -fx-background-color: linear-gradient(to bottom, #f8f6f0 0%, #faf9f5 100%);
 }
 
 .studio-prompt {
   -fx-font-family: "JetBrains Mono", "Cascadia Code", "Consolas", monospace;
-  -fx-font-size: 10px;
+  -fx-font-size: 10.5px;
+  -fx-font-weight: 500;
 }
 
 .studio-prompt-idle {
-  -fx-text-fill: #9e9e9e;
+  -fx-text-fill: #b0bec5;
 }
 
 .studio-prompt-busy {
-  -fx-text-fill: #558b2f;
+  -fx-text-fill: #4caf50;
+  -fx-font-weight: 600;
 }
 
 .studio-hint-cap {
   -fx-font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif;
-  -fx-font-size: 9px;
-  -fx-letter-spacing: 0.2em;
-  -fx-text-fill: #bbbbbb;
+  -fx-font-size: 9.5px;
+  -fx-letter-spacing: 0.22em;
+  -fx-text-fill: #cfd8dc;
+  -fx-font-weight: 600;
 }
 
 /* —— 输出区 —— */
 .output-pane {
-  -fx-background-color: #faf9f5;
+  -fx-background-color: linear-gradient(to bottom, #faf9f5 0%, #f5f2ea 100%);
+}
+
+.output-scroll {
+  -fx-background-color: transparent;
+  -fx-background: transparent;
+}
+
+.output-scroll .viewport {
+  -fx-background-color: transparent;
 }
 
 .output-status-bar {
   -fx-background-color: transparent;
+  -fx-padding: 16 20 12 20;
 }
 
 .output-status-title {
   -fx-font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif;
-  -fx-font-size: 11px;
-  -fx-font-weight: 400;
-  -fx-letter-spacing: 0.14em;
-  -fx-text-fill: #888888;
+  -fx-font-size: 11.5px;
+  -fx-font-weight: 500;
+  -fx-letter-spacing: 0.16em;
+  -fx-text-fill: #90a4af;
 }
 
 .output-status-title.output-status-live {
-  -fx-text-fill: #2e7d32;
+  -fx-text-fill: #388e3c;
+  -fx-font-weight: 600;
 }
 
 .output-status-title.output-status-ready {
-  -fx-text-fill: #1565c0;
+  -fx-text-fill: #1976d2;
+  -fx-font-weight: 600;
 }
 
 .output-status-title.output-status-fallback {
-  -fx-text-fill: #e65100;
+  -fx-text-fill: #ef6c00;
   -fx-font-weight: 700;
 }
 
 .output-status-title.output-status-failed {
-  -fx-text-fill: #c62828;
+  -fx-text-fill: #d32f2f;
   -fx-font-weight: 700;
 }
 
 .output-status-title.output-status-draft {
-  -fx-text-fill: #6d4c41;
+  -fx-text-fill: #5d4037;
   -fx-font-weight: 700;
 }
 
@@ -322,66 +346,66 @@
   -fx-font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif;
   -fx-font-size: 10.5px;
   -fx-font-weight: 700;
-  -fx-letter-spacing: 0.12em;
-  -fx-padding: 6 12 6 12;
+  -fx-letter-spacing: 0.14em;
+  -fx-padding: 7 14 7 14;
   -fx-background-radius: 999;
   -fx-border-radius: 999;
-  -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.08), 8, 0.18, 0, 1);
+  -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.1), 10, 0.2, 0, 2);
 }
 
 .output-status-badge-fallback {
-  -fx-background-color: linear-gradient(to bottom right, rgba(255, 183, 77, 0.35), rgba(230, 81, 0, 0.22));
-  -fx-border-color: rgba(230, 81, 0, 0.42);
+  -fx-background-color: linear-gradient(to bottom right, rgba(255, 193, 7, 0.4) 0%, rgba(255, 152, 0, 0.3) 100%);
+  -fx-border-color: rgba(255, 152, 0, 0.5);
   -fx-border-width: 1;
   -fx-text-fill: #e65100;
 }
 
 .list-view .list-cell.job-cell-fallback {
-  -fx-background-color: linear-gradient(to right, rgba(255, 183, 77, 0.20), rgba(230, 81, 0, 0.08));
-  -fx-border-color: rgba(230, 81, 0, 0.22);
-  -fx-border-width: 0 0 0 4;
+  -fx-background-color: linear-gradient(to right, rgba(255, 193, 7, 0.25) 0%, rgba(255, 152, 0, 0.1) 100%);
+  -fx-border-color: rgba(255, 152, 0, 0.3);
+  -fx-border-width: 0 0 0 5;
 }
 
 .list-view .list-cell.job-cell-fallback:filled:hover {
-  -fx-background-color: rgba(230, 81, 0, 0.12);
+  -fx-background-color: rgba(255, 152, 0, 0.15);
 }
 
 .list-view .list-cell.job-cell-fallback:filled:selected,
 .list-view .list-cell.job-cell-fallback:filled:selected:focused {
-  -fx-background-color: rgba(230, 81, 0, 0.18);
+  -fx-background-color: rgba(255, 152, 0, 0.22);
   -fx-text-fill: #222222;
 }
 
 .list-view .list-cell.job-cell-failed {
-  -fx-background-color: linear-gradient(to right, rgba(239, 83, 80, 0.16), rgba(198, 40, 40, 0.06));
-  -fx-border-color: rgba(198, 40, 40, 0.22);
-  -fx-border-width: 0 0 0 4;
+  -fx-background-color: linear-gradient(to right, rgba(244, 67, 54, 0.2) 0%, rgba(211, 47, 47, 0.08) 100%);
+  -fx-border-color: rgba(211, 47, 47, 0.3);
+  -fx-border-width: 0 0 0 5;
 }
 
 .list-view .list-cell.job-cell-failed:filled:hover {
-  -fx-background-color: rgba(198, 40, 40, 0.12);
+  -fx-background-color: rgba(211, 47, 47, 0.15);
 }
 
 .list-view .list-cell.job-cell-failed:filled:selected,
 .list-view .list-cell.job-cell-failed:filled:selected:focused {
-  -fx-background-color: rgba(198, 40, 40, 0.18);
+  -fx-background-color: rgba(211, 47, 47, 0.22);
   -fx-text-fill: #222222;
 }
 
 /* 多选高亮样式 */
 .list-view .list-cell.job-cell-selected {
-  -fx-background-color: linear-gradient(to right, rgba(66, 165, 245, 0.16), rgba(33, 150, 243, 0.08));
-  -fx-border-color: rgba(33, 150, 243, 0.28);
-  -fx-border-width: 0 0 0 4;
+  -fx-background-color: linear-gradient(to right, rgba(33, 150, 243, 0.2) 0%, rgba(33, 150, 243, 0.1) 100%);
+  -fx-border-color: rgba(33, 150, 243, 0.35);
+  -fx-border-width: 0 0 0 5;
 }
 
 .list-view .list-cell.job-cell-selected:filled:hover {
-  -fx-background-color: rgba(33, 150, 243, 0.14);
+  -fx-background-color: rgba(33, 150, 243, 0.18);
 }
 
 .list-view .list-cell.job-cell-selected:filled:selected,
 .list-view .list-cell.job-cell-selected:filled:selected:focused {
-  -fx-background-color: rgba(33, 150, 243, 0.22);
+  -fx-background-color: rgba(33, 150, 243, 0.28);
   -fx-text-fill: #222222;
 }
 
@@ -394,8 +418,8 @@
 }
 
 .output-main-split > .split-pane-divider {
-  -fx-background-color: rgba(69, 90, 100, 0.12);
-  -fx-padding: 0 2 0 2;
+  -fx-background-color: linear-gradient(to right, rgba(69, 90, 100, 0.08) 0%, rgba(69, 90, 100, 0.15) 50%, rgba(69, 90, 100, 0.08) 100%);
+  -fx-padding: 0 3 0 3;
 }
 
 .output-preview-column {
@@ -403,56 +427,61 @@
 }
 
 .output-failure-card {
-  -fx-background-color: linear-gradient(to bottom right, rgba(255, 235, 238, 0.92), rgba(255, 243, 224, 0.92));
-  -fx-background-radius: 12;
-  -fx-border-color: rgba(198, 40, 40, 0.18);
-  -fx-border-radius: 12;
+  -fx-background-color: linear-gradient(to bottom right, rgba(255, 235, 238, 0.95) 0%, rgba(255, 243, 224, 0.95) 100%);
+  -fx-background-radius: 14;
+  -fx-border-color: rgba(211, 47, 47, 0.25);
+  -fx-border-radius: 14;
   -fx-border-width: 1;
-  -fx-padding: 10 12 10 12;
+  -fx-padding: 12 14 12 14;
+  -fx-effect: dropshadow(gaussian, rgba(211, 47, 47, 0.1), 8, 0.15, 0, 2);
 }
 
 .output-failure-meta {
   -fx-font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif;
-  -fx-font-size: 10px;
+  -fx-font-size: 10.5px;
   -fx-font-weight: 700;
-  -fx-letter-spacing: 0.08em;
-  -fx-text-fill: #c62828;
+  -fx-letter-spacing: 0.1em;
+  -fx-text-fill: #d32f2f;
 }
 
 .output-failure-text {
-  -fx-font-size: 12px;
-  -fx-line-spacing: 2px;
-  -fx-text-fill: #5d4037;
+  -fx-font-size: 12.5px;
+  -fx-line-spacing: 3px;
+  -fx-text-fill: #4e342e;
 }
 
 .output-preview-stack {
-  -fx-background-color: rgba(69, 90, 100, 0.06);
-  -fx-background-radius: 8;
-  -fx-padding: 8;
+  -fx-background-color: linear-gradient(to bottom right, rgba(69, 90, 100, 0.08) 0%, rgba(69, 90, 100, 0.04) 100%);
+  -fx-background-radius: 10;
+  -fx-padding: 10;
+  -fx-border-color: rgba(69, 90, 100, 0.1);
+  -fx-border-radius: 10;
+  -fx-border-width: 1;
 }
 
 .output-video-transport {
-  -fx-padding: 4 0 0 0;
+  -fx-padding: 6 0 0 0;
 }
 
 .output-preview-seek {
-  -fx-padding: 4 0 4 0;
+  -fx-padding: 6 0 6 0;
 }
 
 .output-preview-seek .track {
-  -fx-background-color: rgba(69, 90, 100, 0.18);
-  -fx-background-radius: 3;
+  -fx-background-color: linear-gradient(to right, rgba(69, 90, 100, 0.15) 0%, rgba(69, 90, 100, 0.25) 100%);
+  -fx-background-radius: 4;
 }
 
 .output-preview-seek .thumb {
-  -fx-background-color: #455a64;
-  -fx-background-radius: 6;
-  -fx-pref-height: 12;
-  -fx-pref-width: 12;
+  -fx-background-color: linear-gradient(to bottom, #5d7b8a 0%, #455a64 100%);
+  -fx-background-radius: 7;
+  -fx-pref-height: 14;
+  -fx-pref-width: 14;
+  -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 4, 0.3, 0, 1);
 }
 
 .output-preview-seek:hover .thumb {
-  -fx-background-color: #ff7043;
+  -fx-background-color: linear-gradient(to bottom, #ff8a65 0%, #ff7043 100%);
 }
 
 .output-image-scroll {
@@ -464,12 +493,12 @@
 }
 
 .output-fullscreen-root {
-  -fx-background-color: #141414;
+  -fx-background-color: #121212;
 }
 
 .output-history {
   -fx-background-color: transparent;
-  -fx-border-color: rgba(69, 90, 100, 0.1);
+  -fx-border-color: rgba(69, 90, 100, 0.12);
   -fx-border-width: 1 0 0 0;
 }
 
@@ -479,48 +508,49 @@
 }
 
 .output-summary-pill {
-  -fx-spacing: 4;
-  -fx-padding: 12 14 12 14;
-  -fx-background-color: linear-gradient(to bottom right, rgba(255, 255, 255, 0.82), rgba(245, 242, 234, 0.92));
-  -fx-background-radius: 16;
-  -fx-border-color: rgba(69, 90, 100, 0.12);
-  -fx-border-radius: 16;
+  -fx-spacing: 5;
+  -fx-padding: 14 16 14 16;
+  -fx-background-color: linear-gradient(to bottom right, rgba(255, 255, 255, 0.85) 0%, rgba(245, 242, 234, 0.95) 100%);
+  -fx-background-radius: 18;
+  -fx-border-color: rgba(69, 90, 100, 0.15);
+  -fx-border-radius: 18;
   -fx-border-width: 1;
-  -fx-min-height: 76;
+  -fx-min-height: 80;
+  -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.05), 6, 0.15, 0, 2);
 }
 
 .output-summary-pill-compact {
-  -fx-min-width: 108;
-  -fx-pref-width: 108;
+  -fx-min-width: 112;
+  -fx-pref-width: 112;
 }
 
 .output-summary-caption {
   -fx-font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif;
-  -fx-font-size: 10px;
+  -fx-font-size: 10.5px;
   -fx-font-weight: 700;
   -fx-letter-spacing: 0.12em;
   -fx-text-fill: #90a4ae;
 }
 
 .output-summary-value {
-  -fx-font-size: 13px;
+  -fx-font-size: 14px;
   -fx-font-weight: 700;
-  -fx-text-fill: #37474f;
+  -fx-text-fill: #263238;
 }
 
 .output-summary-value-soft {
-  -fx-font-size: 12px;
+  -fx-font-size: 12.5px;
   -fx-font-weight: 500;
-  -fx-text-fill: #546e7a;
-  -fx-line-spacing: 2;
+  -fx-text-fill: #455a64;
+  -fx-line-spacing: 3;
 }
 
 .history-filter-row {
-  -fx-padding: 8 10 8 10;
-  -fx-background-color: rgba(69, 90, 100, 0.045);
-  -fx-background-radius: 12;
-  -fx-border-color: rgba(69, 90, 100, 0.08);
-  -fx-border-radius: 12;
+  -fx-padding: 10 12 10 12;
+  -fx-background-color: linear-gradient(to right, rgba(93, 123, 138, 0.06) 0%, rgba(93, 123, 138, 0.03) 100%);
+  -fx-background-radius: 14;
+  -fx-border-color: rgba(69, 90, 100, 0.1);
+  -fx-border-radius: 14;
   -fx-border-width: 1;
   -fx-alignment: center-left;
 }
@@ -539,115 +569,119 @@
 }
 
 .history-toolbar {
-  -fx-padding: 0 0 2 0;
+  -fx-padding: 0 0 3 0;
 }
 
 .history-toolbar .button {
-  -fx-min-height: 30;
+  -fx-min-height: 32;
 }
 
 .batch-operation-bar {
-  -fx-padding: 8 10 8 10;
-  -fx-background-color: linear-gradient(to bottom right, rgba(255, 248, 225, 0.96), rgba(255, 243, 224, 0.96));
-  -fx-background-radius: 12;
-  -fx-border-color: rgba(255, 112, 67, 0.20);
-  -fx-border-radius: 12;
+  -fx-padding: 10 12 10 12;
+  -fx-background-color: linear-gradient(to bottom right, rgba(255, 248, 225, 0.97) 0%, rgba(255, 243, 224, 0.97) 100%);
+  -fx-background-radius: 14;
+  -fx-border-color: rgba(255, 152, 0, 0.3);
+  -fx-border-radius: 14;
   -fx-border-width: 1;
+  -fx-effect: dropshadow(gaussian, rgba(255, 152, 0, 0.1), 6, 0.15, 0, 2);
 }
 
 .batch-operation-bar .button {
-  -fx-min-height: 30;
+  -fx-min-height: 32;
 }
 
 .history-action-card {
-  -fx-background-color: linear-gradient(to bottom right, rgba(255, 248, 225, 0.96), rgba(255, 243, 224, 0.96));
-  -fx-background-radius: 14;
-  -fx-border-color: rgba(255, 112, 67, 0.22);
-  -fx-border-radius: 14;
+  -fx-background-color: linear-gradient(to bottom right, rgba(255, 248, 225, 0.97) 0%, rgba(255, 243, 224, 0.97) 100%);
+  -fx-background-radius: 16;
+  -fx-border-color: rgba(255, 152, 0, 0.3);
+  -fx-border-radius: 16;
   -fx-border-width: 1;
-  -fx-padding: 12 14 12 14;
+  -fx-padding: 14 16 14 16;
+  -fx-effect: dropshadow(gaussian, rgba(255, 152, 0, 0.1), 8, 0.2, 0, 2);
 }
 
 .history-action-title {
   -fx-font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif;
-  -fx-font-size: 11px;
+  -fx-font-size: 11.5px;
   -fx-font-weight: 700;
-  -fx-letter-spacing: 0.12em;
-  -fx-text-fill: #d84315;
+  -fx-letter-spacing: 0.14em;
+  -fx-text-fill: #e65100;
 }
 
 .history-action-hint {
-  -fx-font-size: 11px;
-  -fx-text-fill: #795548;
-  -fx-wrap-text: true;
-  -fx-line-spacing: 3;
-}
-
-.history-cap {
-  -fx-font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif;
-  -fx-font-size: 10px;
-  -fx-letter-spacing: 0.2em;
-  -fx-text-fill: #888888;
-}
-
-.history-sep {
-  -fx-font-size: 10px;
-  -fx-text-fill: #cccccc;
-}
-
-.history-sub {
-  -fx-font-size: 11px;
-  -fx-text-fill: #aaaaaa;
-}
-
-.history-count {
-  -fx-font-family: "JetBrains Mono", "Cascadia Code", "Consolas", monospace;
-  -fx-font-size: 11px;
-  -fx-font-weight: 600;
-  -fx-text-fill: #616161;
-  -fx-min-width: 22;
-}
-
-/* —— Zen 分区：无阴影，仅底部分隔 —— */
-.zen-section {
-  -fx-padding: 14 0 16 0;
-  -fx-border-color: rgba(69, 90, 100, 0.08);
-  -fx-border-width: 0 0 1 0;
-  -fx-spacing: 8;
-}
-
-.zen-section-wide {
-  -fx-border-width: 0;
-  -fx-padding: 0 0 8 0;
-}
-
-.zen-section-title {
-  -fx-font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif;
-  -fx-font-size: 11px;
-  -fx-font-weight: 600;
-  -fx-letter-spacing: 0.14em;
-  -fx-text-fill: #546e7a;
-}
-
-.zen-section-tag {
-  -fx-font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif;
-  -fx-font-size: 9.5px;
-  -fx-letter-spacing: 0.1em;
-  -fx-text-fill: #9e9e9e;
-}
-
-.zen-hint {
-  -fx-font-size: 11px;
-  -fx-text-fill: #757575;
+  -fx-font-size: 11.5px;
+  -fx-text-fill: #6d4c41;
   -fx-wrap-text: true;
   -fx-line-spacing: 4;
 }
 
-.zen-hint-subtle {
+.history-cap {
+  -fx-font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif;
+  -fx-font-size: 10.5px;
+  -fx-letter-spacing: 0.22em;
+  -fx-text-fill: #90a4af;
+  -fx-font-weight: 600;
+}
+
+.history-sep {
+  -fx-font-size: 10.5px;
+  -fx-text-fill: #b0bec5;
+}
+
+.history-sub {
+  -fx-font-size: 11.5px;
+  -fx-text-fill: #b0bec5;
+}
+
+.history-count {
+  -fx-font-family: "JetBrains Mono", "Cascadia Code", "Consolas", monospace;
+  -fx-font-size: 11.5px;
+  -fx-font-weight: 600;
+  -fx-text-fill: #455a64;
+  -fx-min-width: 24;
+}
+
+/* —— Zen 分区：无阴影，仅底部分隔 —— */
+.zen-section {
+  -fx-padding: 16 0 18 0;
+  -fx-border-color: rgba(69, 90, 100, 0.1);
+  -fx-border-width: 0 0 1 0;
+  -fx-spacing: 10;
+}
+
+.zen-section-wide {
+  -fx-border-width: 0;
+  -fx-padding: 0 0 10 0;
+}
+
+.zen-section-title {
+  -fx-font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif;
+  -fx-font-size: 11.5px;
+  -fx-font-weight: 600;
+  -fx-letter-spacing: 0.16em;
+  -fx-text-fill: #455a64;
+}
+
+.zen-section-tag {
+  -fx-font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif;
   -fx-font-size: 10px;
-  -fx-text-fill: #9e9e9e;
+  -fx-letter-spacing: 0.12em;
+  -fx-text-fill: #b0bec5;
+  -fx-font-weight: 500;
+}
+
+.zen-hint {
+  -fx-font-size: 11.5px;
+  -fx-text-fill: #607d8b;
   -fx-wrap-text: true;
-  -fx-line-spacing: 2;
+  -fx-line-spacing: 5;
+}
+
+.zen-hint-subtle {
+  -fx-font-size: 10.5px;
+  -fx-text-fill: #b0bec5;
+  -fx-wrap-text: true;
+  -fx-line-spacing: 3;
   -fx-text-alignment: center;
 }
 
@@ -657,77 +691,77 @@
 
 /* —— 课堂：创作方式分段控件（单选、清晰层次，对齐 UI/UX 可触达目标与主次操作） —— */
 .edu-mode-segment {
-  -fx-background-color: rgba(69, 90, 100, 0.07);
-  -fx-background-radius: 10;
-  -fx-padding: 3;
+  -fx-background-color: linear-gradient(to right, rgba(93, 123, 138, 0.08) 0%, rgba(93, 123, 138, 0.05) 100%);
+  -fx-background-radius: 12;
+  -fx-padding: 4;
   -fx-spacing: 0;
-  -fx-border-color: rgba(69, 90, 100, 0.1);
-  -fx-border-radius: 10;
+  -fx-border-color: rgba(69, 90, 100, 0.12);
+  -fx-border-radius: 12;
   -fx-border-width: 1;
 }
 
 .toggle-button.edu-mode-toggle {
-  -fx-background-radius: 8;
-  -fx-padding: 8 18 8 18;
-  -fx-min-height: 36;
+  -fx-background-radius: 9;
+  -fx-padding: 10 20 10 20;
+  -fx-min-height: 38;
   -fx-background-color: transparent;
   -fx-text-fill: #78909c;
-  -fx-font-size: 12px;
+  -fx-font-size: 12.5px;
   -fx-font-weight: 500;
 }
 
 .toggle-button.edu-mode-toggle:hover {
   -fx-text-fill: #546e7a;
-  -fx-background-color: rgba(69, 90, 100, 0.05);
-}
-
-.toggle-button.edu-mode-toggle:selected {
-  -fx-background-color: #faf9f5;
-  -fx-text-fill: #37474f;
-  -fx-effect: dropshadow(gaussian, rgba(69, 90, 100, 0.14), 8, 0.22, 0, 1);
-}
-
-.toggle-button.edu-mode-toggle:focused {
   -fx-background-color: rgba(69, 90, 100, 0.06);
 }
 
+.toggle-button.edu-mode-toggle:selected {
+  -fx-background-color: linear-gradient(to bottom, #ffffff 0%, #faf9f5 100%);
+  -fx-text-fill: #37474f;
+  -fx-effect: dropshadow(gaussian, rgba(69, 90, 100, 0.18), 10, 0.25, 0, 2);
+}
+
+.toggle-button.edu-mode-toggle:focused {
+  -fx-background-color: rgba(69, 90, 100, 0.07);
+}
+
 .toggle-button.edu-mode-toggle:selected:focused {
-  -fx-background-color: #faf9f5;
+  -fx-background-color: linear-gradient(to bottom, #ffffff 0%, #faf9f5 100%);
 }
 
 .edu-field-label {
   -fx-font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif;
-  -fx-font-size: 11px;
+  -fx-font-size: 11.5px;
   -fx-font-weight: 600;
-  -fx-text-fill: #607d8b;
-  -fx-letter-spacing: 0.06em;
+  -fx-text-fill: #546e7a;
+  -fx-letter-spacing: 0.08em;
 }
 
 .edu-tutor-field {
-  -fx-spacing: 4;
+  -fx-spacing: 5;
 }
 
 .combo-box.edu-example-combo {
-  -fx-min-height: 36;
+  -fx-min-height: 38;
 }
 
 .combo-box.edu-example-combo > .list-cell {
-  -fx-text-fill: #455a64;
+  -fx-text-fill: #37474f;
 }
 
 .zen-micro-heading {
   -fx-font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif;
-  -fx-font-size: 10px;
+  -fx-font-size: 10.5px;
   -fx-font-weight: 600;
-  -fx-letter-spacing: 0.12em;
-  -fx-text-fill: #9e9e9e;
+  -fx-letter-spacing: 0.14em;
+  -fx-text-fill: #b0bec5;
 }
 
 .zen-section-inner {
-  -fx-padding: 12 0 14 0;
-  -fx-border-color: rgba(69, 90, 100, 0.06);
+  -fx-padding: 14 0 16 0;
+  -fx-border-color: rgba(69, 90, 100, 0.08);
   -fx-border-width: 0 0 1 0;
-  -fx-spacing: 8;
+  -fx-spacing: 10;
 }
 
 .zen-accordion {
@@ -735,113 +769,113 @@
 }
 
 .zen-accordion > .titled-pane {
-  -fx-text-fill: #757575;
+  -fx-text-fill: #607d8b;
   -fx-background-color: transparent;
 }
 
 .zen-accordion > .titled-pane > .title {
-  -fx-background-color: rgba(69, 90, 100, 0.04);
-  -fx-border-color: rgba(69, 90, 100, 0.08);
+  -fx-background-color: linear-gradient(to right, rgba(93, 123, 138, 0.06) 0%, rgba(93, 123, 138, 0.03) 100%);
+  -fx-border-color: rgba(69, 90, 100, 0.1);
   -fx-border-width: 1 0 0 0;
-  -fx-padding: 12 10 12 8;
+  -fx-padding: 14 12 14 10;
 }
 
 .zen-accordion > .titled-pane > .title > .arrow-button .arrow {
-  -fx-background-color: #888888;
+  -fx-background-color: #78909c;
 }
 
 .zen-accordion > .titled-pane > .content {
   -fx-border-color: transparent;
-  -fx-background-color: #faf9f5;
-  -fx-padding: 0 6 12 10;
+  -fx-background-color: linear-gradient(to bottom, #faf9f5 0%, #f5f2ea 100%);
+  -fx-padding: 0 8 14 12;
 }
 
 .button.btn-zen-hero {
   -fx-background-radius: 999;
-  -fx-padding: 0 40;
-  -fx-min-height: 44;
-  -fx-font-size: 13px;
+  -fx-padding: 0 44;
+  -fx-min-height: 46;
+  -fx-font-size: 13.5px;
   -fx-font-weight: 600;
-  -fx-letter-spacing: 0.04em;
-  -fx-background-color: linear-gradient(to bottom right, #ffb74d, #ff6d00);
+  -fx-letter-spacing: 0.05em;
+  -fx-background-color: linear-gradient(to bottom right, #ffc107 0%, #ff9800 50%, #f57c00 100%);
   -fx-text-fill: #ffffff;
-  -fx-effect: dropshadow(gaussian, rgba(230, 81, 0, 0.35), 10, 0.3, 0, 2);
+  -fx-effect: dropshadow(gaussian, rgba(255, 152, 0, 0.4), 12, 0.35, 0, 3);
   -fx-scale-x: 1;
   -fx-scale-y: 1;
   -fx-translate-y: 0;
 }
 
 .button.btn-zen-hero:hover {
-  -fx-background-color: linear-gradient(to bottom right, #ffcc80, #f4511e);
-  -fx-effect: dropshadow(gaussian, rgba(230, 81, 0, 0.42), 12, 0.32, 0, 3);
-  -fx-translate-y: -1;
+  -fx-background-color: linear-gradient(to bottom right, #ffd54f 0%, #ffb74d 50%, #ff9800 100%);
+  -fx-effect: dropshadow(gaussian, rgba(255, 152, 0, 0.5), 14, 0.4, 0, 4);
+  -fx-translate-y: -2;
 }
 
 .button.btn-zen-hero:pressed {
-  -fx-background-color: linear-gradient(to bottom right, #ff9800, #e65100);
-  -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 4, 0.25, 0, 1);
+  -fx-background-color: linear-gradient(to bottom right, #ffb300 0%, #ff8f00 50%, #e65100 100%);
+  -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 4, 0.3, 0, 1);
   -fx-translate-y: 0;
-  -fx-scale-x: 0.985;
-  -fx-scale-y: 0.985;
+  -fx-scale-x: 0.98;
+  -fx-scale-y: 0.98;
 }
 
 .zen-toolbar {
-  -fx-padding: 4 0 0 0;
-  -fx-spacing: 8;
+  -fx-padding: 6 0 0 0;
+  -fx-spacing: 10;
 }
 
 .zen-micro {
   -fx-font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif;
-  -fx-font-size: 10px;
-  -fx-text-fill: #aaaaaa;
-  -fx-min-width: 32;
+  -fx-font-size: 10.5px;
+  -fx-text-fill: #b0bec5;
+  -fx-min-width: 34;
 }
 
 .zen-segment {
-  -fx-background-color: rgba(69, 90, 100, 0.05);
-  -fx-background-radius: 6;
-  -fx-padding: 4 6 4 6;
-  -fx-spacing: 6;
+  -fx-background-color: linear-gradient(to right, rgba(93, 123, 138, 0.07) 0%, rgba(93, 123, 138, 0.04) 100%);
+  -fx-background-radius: 8;
+  -fx-padding: 5 7 5 7;
+  -fx-spacing: 7;
 }
 
 .zen-chips {
-  -fx-padding: 4 0 0 0;
+  -fx-padding: 6 0 0 0;
 }
 
 .zen-chips-wrap {
-  -fx-padding: 4 0 0 0;
+  -fx-padding: 6 0 0 0;
 }
 
 .zen-actions-main {
-  -fx-padding: 4 0 8 0;
+  -fx-padding: 6 0 10 0;
 }
 
 .label {
-  -fx-text-fill: #444444;
+  -fx-text-fill: #37474f;
 }
 
 .zen-form-label {
   -fx-font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif;
-  -fx-font-size: 11.5px;
+  -fx-font-size: 12px;
   -fx-font-weight: 500;
-  -fx-text-fill: #616161;
-  -fx-letter-spacing: 0.02em;
+  -fx-text-fill: #546e7a;
+  -fx-letter-spacing: 0.03em;
 }
 
 .settings-scroll {
-  -fx-background-color: #faf9f5;
+  -fx-background-color: linear-gradient(to bottom, #faf9f5 0%, #f5f2ea 100%);
 }
 
 .settings-scroll .viewport {
-  -fx-background-color: #faf9f5;
+  -fx-background-color: linear-gradient(to bottom, #faf9f5 0%, #f5f2ea 100%);
 }
 
 .settings-section-card {
-  -fx-padding: 18 20 18 20;
-  -fx-spacing: 12;
-  -fx-background-color: linear-gradient(to bottom right, rgba(255, 255, 255, 0.86), rgba(248, 245, 238, 0.96));
-  -fx-background-radius: 18;
-  -fx-border-color: rgba(69, 90, 100, 0.10);
+  -fx-padding: 20 22 20 22;
+  -fx-spacing: 14;
+  -fx-background-color: linear-gradient(to bottom right, rgba(255, 255, 255, 0.88) 0%, rgba(248, 245, 238, 0.97) 100%);
+  -fx-background-radius: 20;
+  -fx-border-color: rgba(69, 90, 100, 0.12);
   -fx-border-radius: 18;
   -fx-border-width: 1;
 }
@@ -850,31 +884,32 @@
 .text-field,
 .password-field {
   -fx-font-family: "LXGW WenKai GB Screen", "LXGW WenKai Screen", "Inter", "Microsoft YaHei UI", sans-serif;
-  -fx-background-color: #f0ebe3;
-  -fx-background-radius: 6;
-  -fx-border-color: rgba(69, 90, 100, 0.12);
-  -fx-border-radius: 6;
-  -fx-text-fill: #333333;
-  -fx-padding: 10 12 10 12;
+  -fx-background-color: linear-gradient(to bottom, #f2ede5 0%, #efe9e0 100%);
+  -fx-background-radius: 8;
+  -fx-border-color: rgba(69, 90, 100, 0.15);
+  -fx-border-radius: 8;
+  -fx-text-fill: #263238;
+  -fx-padding: 11 13 11 13;
 }
 
 .text-field:focused,
 .password-field:focused {
-  -fx-border-color: rgba(69, 90, 100, 0.32);
-  -fx-background-color: #f4efe8;
+  -fx-border-color: rgba(93, 123, 138, 0.4);
+  -fx-background-color: linear-gradient(to bottom, #f5f0e8 0%, #f2ede5 100%);
+  -fx-effect: dropshadow(gaussian, rgba(93, 123, 138, 0.15), 6, 0.2, 0, 1);
 }
 
 .zen-input,
 .text-area {
   -fx-font-family: "LXGW WenKai GB Screen", "LXGW WenKai Screen", "Inter", "Microsoft YaHei UI", sans-serif;
-  -fx-prompt-text-fill: #a8a8a8;
-  -fx-background-color: #f0ebe3;
-  -fx-control-inner-background: #f0ebe3;
-  -fx-text-fill: #333333;
-  -fx-background-radius: 8;
-  -fx-border-color: rgba(69, 90, 100, 0.12);
-  -fx-border-radius: 8;
-  -fx-padding: 12 14 12 14;
+  -fx-prompt-text-fill: #b0bec5;
+  -fx-background-color: linear-gradient(to bottom, #f2ede5 0%, #efe9e0 100%);
+  -fx-control-inner-background: linear-gradient(to bottom, #f2ede5 0%, #efe9e0 100%);
+  -fx-text-fill: #263238;
+  -fx-background-radius: 10;
+  -fx-border-color: rgba(69, 90, 100, 0.15);
+  -fx-border-radius: 10;
+  -fx-padding: 13 15 13 15;
 }
 
 .text-area .scroll-pane {
@@ -884,142 +919,144 @@
 .text-area .scroll-pane .viewport,
 .text-area .scroll-pane .content,
 .text-area .content {
-  -fx-background-color: #f0ebe3;
+  -fx-background-color: linear-gradient(to bottom, #f2ede5 0%, #efe9e0 100%);
 }
 
 .text-area:focused {
-  -fx-border-color: rgba(69, 90, 100, 0.28);
-  -fx-background-color: #f4efe8;
-  -fx-control-inner-background: #f4efe8;
+  -fx-border-color: rgba(93, 123, 138, 0.35);
+  -fx-background-color: linear-gradient(to bottom, #f5f0e8 0%, #f2ede5 100%);
+  -fx-control-inner-background: linear-gradient(to bottom, #f5f0e8 0%, #f2ede5 100%);
+  -fx-effect: dropshadow(gaussian, rgba(93, 123, 138, 0.12), 6, 0.18, 0, 1);
 }
 
 .text-area:focused .scroll-pane .viewport,
 .text-area:focused .scroll-pane .content,
 .text-area:focused .content {
-  -fx-background-color: #f4efe8;
+  -fx-background-color: linear-gradient(to bottom, #f5f0e8 0%, #f2ede5 100%);
 }
 
 .text-area.concept-hero {
-  -fx-font-size: 14px;
+  -fx-font-size: 14.5px;
   -fx-font-weight: 400;
-  -fx-line-spacing: 5;
-  -fx-letter-spacing: 0.01em;
+  -fx-line-spacing: 6;
+  -fx-letter-spacing: 0.015em;
 }
 
 .text-area.code-editor {
   -fx-font-family: "JetBrains Mono", "Cascadia Code", "Consolas", "Microsoft YaHei UI", monospace;
-  -fx-font-size: 12px;
-  -fx-background-color: #e8e4dd;
-  -fx-control-inner-background: #e8e4dd;
+  -fx-font-size: 12.5px;
+  -fx-background-color: linear-gradient(to bottom, #eae6df 0%, #e6e2db 100%);
+  -fx-control-inner-background: linear-gradient(to bottom, #eae6df 0%, #e6e2db 100%);
 }
 
 .text-area.code-editor .scroll-pane .viewport,
 .text-area.code-editor .scroll-pane .content,
 .text-area.code-editor .content {
-  -fx-background-color: #e8e4dd;
+  -fx-background-color: linear-gradient(to bottom, #eae6df 0%, #e6e2db 100%);
 }
 
 .text-area.code-editor:focused {
-  -fx-background-color: #ebe7df;
-  -fx-control-inner-background: #ebe7df;
+  -fx-background-color: linear-gradient(to bottom, #ede9e2 0%, #eae6df 100%);
+  -fx-control-inner-background: linear-gradient(to bottom, #ede9e2 0%, #eae6df 100%);
 }
 
 .text-area.code-editor:focused .scroll-pane .viewport,
 .text-area.code-editor:focused .scroll-pane .content,
 .text-area.code-editor:focused .content {
-  -fx-background-color: #ebe7df;
+  -fx-background-color: linear-gradient(to bottom, #ede9e2 0%, #eae6df 100%);
 }
 
 .text-area.log-view {
   -fx-font-family: "JetBrains Mono", "Cascadia Code", "Consolas", monospace;
-  -fx-font-size: 11px;
-  -fx-line-spacing: 2;
-  -fx-text-fill: #555555;
-  -fx-prompt-text-fill: #a8a8a8;
-  -fx-background-color: #ebe7df;
-  -fx-control-inner-background: #ebe7df;
-  -fx-border-color: rgba(69, 90, 100, 0.12);
+  -fx-font-size: 11.5px;
+  -fx-line-spacing: 3;
+  -fx-text-fill: #455a64;
+  -fx-prompt-text-fill: #b0bec5;
+  -fx-background-color: linear-gradient(to bottom, #ede9e2 0%, #e9e5de 100%);
+  -fx-control-inner-background: linear-gradient(to bottom, #ede9e2 0%, #e9e5de 100%);
+  -fx-border-color: rgba(69, 90, 100, 0.15);
 }
 
 .text-area.log-view .scroll-pane .viewport,
 .text-area.log-view .scroll-pane .content,
 .text-area.log-view .content {
-  -fx-background-color: #ebe7df;
+  -fx-background-color: linear-gradient(to bottom, #ede9e2 0%, #e9e5de 100%);
 }
 
 .text-area.log-view:focused {
-  -fx-border-color: rgba(69, 90, 100, 0.22);
-  -fx-background-color: #f0ebe3;
-  -fx-control-inner-background: #f0ebe3;
+  -fx-border-color: rgba(93, 123, 138, 0.3);
+  -fx-background-color: linear-gradient(to bottom, #f0ece5 0%, #ede9e2 100%);
+  -fx-control-inner-background: linear-gradient(to bottom, #f0ece5 0%, #ede9e2 100%);
 }
 
 .text-area.log-view:focused .scroll-pane .viewport,
 .text-area.log-view:focused .scroll-pane .content,
 .text-area.log-view:focused .content {
-  -fx-background-color: #f0ebe3;
+  -fx-background-color: linear-gradient(to bottom, #f0ece5 0%, #ede9e2 100%);
 }
 
 .choice-box {
   -fx-font-family: "Inter", "Segoe UI", "Microsoft YaHei UI", sans-serif;
-  -fx-background-color: #f0ebe3;
-  -fx-border-color: rgba(69, 90, 100, 0.12);
-  -fx-border-radius: 8;
-  -fx-background-radius: 8;
-  -fx-mark-color: #455a64;
-  -fx-padding: 6 16 6 12;
-  -fx-min-height: 32;
+  -fx-background-color: linear-gradient(to bottom, #f2ede5 0%, #efe9e0 100%);
+  -fx-border-color: rgba(69, 90, 100, 0.15);
+  -fx-border-radius: 10;
+  -fx-background-radius: 10;
+  -fx-mark-color: #546e7a;
+  -fx-padding: 7 18 7 14;
+  -fx-min-height: 34;
 }
 
 .choice-box:hover {
-  -fx-border-color: rgba(69, 90, 100, 0.22);
+  -fx-border-color: rgba(93, 123, 138, 0.3);
 }
 
 .choice-box > .label {
-  -fx-text-fill: #455a64;
-  -fx-font-size: 11px;
+  -fx-text-fill: #37474f;
+  -fx-font-size: 11.5px;
 }
 
 .choice-box:focused {
-  -fx-border-color: rgba(69, 90, 100, 0.45);
+  -fx-border-color: rgba(93, 123, 138, 0.5);
+  -fx-effect: dropshadow(gaussian, rgba(93, 123, 138, 0.15), 6, 0.2, 0, 1);
 }
 
 .check-box.zen-check,
 .check-box {
-  -fx-text-fill: #666666;
-  -fx-font-size: 11px;
+  -fx-text-fill: #546e7a;
+  -fx-font-size: 11.5px;
 }
 
 .check-box .box {
-  -fx-background-color: #f0ebe3;
-  -fx-border-color: rgba(69, 90, 100, 0.22);
+  -fx-background-color: linear-gradient(to bottom, #f2ede5 0%, #efe9e0 100%);
+  -fx-border-color: rgba(69, 90, 100, 0.25);
 }
 
 .check-box:selected .mark {
-  -fx-background-color: #555555;
+  -fx-background-color: #37474f;
 }
 
 /* —— 列表 —— */
 .list-view {
-  -fx-background-color: #f0ebe3;
-  -fx-border-color: rgba(69, 90, 100, 0.12);
-  -fx-border-radius: 6;
-  -fx-background-radius: 6;
+  -fx-background-color: linear-gradient(to bottom, #efe9e0 0%, #eae6df 100%);
+  -fx-border-color: rgba(69, 90, 100, 0.15);
+  -fx-border-radius: 8;
+  -fx-background-radius: 8;
 }
 
 .list-view .list-cell {
-  -fx-background-color: #f0ebe3;
-  -fx-text-fill: #444444;
-  -fx-padding: 8 12 8 12;
+  -fx-background-color: linear-gradient(to bottom, #efe9e0 0%, #eae6df 100%);
+  -fx-text-fill: #37474f;
+  -fx-padding: 9 13 9 13;
 }
 
 .list-view .list-cell:filled:selected,
 .list-view .list-cell:filled:selected:focused {
-  -fx-background-color: #e3ddd4;
-  -fx-text-fill: #222222;
+  -fx-background-color: linear-gradient(to right, rgba(93, 123, 138, 0.12) 0%, rgba(93, 123, 138, 0.08) 100%);
+  -fx-text-fill: #263238;
 }
 
 .list-view .list-cell:filled:hover {
-  -fx-background-color: #e8e2d9;
+  -fx-background-color: linear-gradient(to right, rgba(93, 123, 138, 0.08) 0%, rgba(93, 123, 138, 0.05) 100%);
 }
 
 /* 滚动条：细、低对比 */
@@ -1029,12 +1066,12 @@
 }
 
 .scroll-bar .thumb {
-  -fx-background-color: rgba(0, 0, 0, 0.14);
-  -fx-background-radius: 4;
+  -fx-background-color: rgba(69, 90, 100, 0.18);
+  -fx-background-radius: 5;
 }
 
 .scroll-bar .thumb:hover {
-  -fx-background-color: rgba(0, 0, 0, 0.22);
+  -fx-background-color: rgba(69, 90, 100, 0.28);
 }
 
 .scroll-bar .increment-button,
@@ -1050,12 +1087,12 @@
 .button {
   -fx-cursor: hand;
   -fx-font-family: "Inter", "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", sans-serif;
-  -fx-font-size: 11.5px;
+  -fx-font-size: 12px;
   -fx-font-weight: 500;
-  -fx-letter-spacing: 0.04em;
+  -fx-letter-spacing: 0.05em;
   -fx-background-insets: 0;
   -fx-border-insets: 0;
-  -fx-min-height: 32;
+  -fx-min-height: 34;
   -fx-scale-x: 1;
   -fx-scale-y: 1;
   -fx-translate-y: 0;
@@ -1063,179 +1100,401 @@
 
 .button.btn-zen-primary {
   -fx-background-radius: 999;
-  -fx-padding: 0 24;
-  -fx-background-color: #455a64;
+  -fx-padding: 0 26;
+  -fx-background-color: linear-gradient(to bottom, #5d7b8a 0%, #455a64 100%);
   -fx-text-fill: #faf9f5;
   -fx-border-color: transparent;
-  -fx-effect: dropshadow(gaussian, rgba(38, 50, 56, 0.22), 6, 0.25, 0, 1);
+  -fx-effect: dropshadow(gaussian, rgba(38, 50, 56, 0.25), 8, 0.3, 0, 2);
 }
 
 .button.btn-zen-primary:hover {
-  -fx-background-color: #37474f;
-  -fx-effect: dropshadow(gaussian, rgba(38, 50, 56, 0.28), 8, 0.28, 0, 2);
-  -fx-translate-y: -0.5;
+  -fx-background-color: linear-gradient(to bottom, #6d8b9a 0%, #546e7a 100%);
+  -fx-effect: dropshadow(gaussian, rgba(38, 50, 56, 0.32), 10, 0.35, 0, 3);
+  -fx-translate-y: -1;
 }
 
 .button.btn-zen-primary:pressed {
-  -fx-background-color: #263238;
-  -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.12), 3, 0.2, 0, 0);
+  -fx-background-color: linear-gradient(to bottom, #37474f 0%, #263238 100%);
+  -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.15), 4, 0.25, 0, 1);
   -fx-translate-y: 0;
-  -fx-scale-x: 0.985;
-  -fx-scale-y: 0.985;
+  -fx-scale-x: 0.98;
+  -fx-scale-y: 0.98;
 }
 
 .button.btn-zen-outline {
   -fx-background-radius: 999;
-  -fx-padding: 0 20;
-  -fx-background-color: #ebe8e0;
-  -fx-text-fill: #546e7a;
-  -fx-border-color: rgba(69, 90, 100, 0.22);
+  -fx-padding: 0 22;
+  -fx-background-color: linear-gradient(to bottom, #f0ece5 0%, #e8e4dd 100%);
+  -fx-text-fill: #455a64;
+  -fx-border-color: rgba(69, 90, 100, 0.25);
   -fx-border-width: 1;
   -fx-border-radius: 999;
 }
 
 .button.btn-zen-outline:hover {
-  -fx-background-color: rgba(69, 90, 100, 0.1);
-  -fx-border-color: rgba(69, 90, 100, 0.38);
+  -fx-background-color: linear-gradient(to bottom, rgba(93, 123, 138, 0.12) 0%, rgba(93, 123, 138, 0.08) 100%);
+  -fx-border-color: rgba(93, 123, 138, 0.45);
   -fx-text-fill: #37474f;
-  -fx-translate-y: -0.5;
+  -fx-translate-y: -1;
 }
 
 .button.btn-zen-outline:pressed {
-  -fx-background-color: rgba(69, 90, 100, 0.12);
+  -fx-background-color: linear-gradient(to bottom, rgba(93, 123, 138, 0.15) 0%, rgba(93, 123, 138, 0.1) 100%);
   -fx-translate-y: 0;
-  -fx-scale-x: 0.985;
-  -fx-scale-y: 0.985;
+  -fx-scale-x: 0.98;
+  -fx-scale-y: 0.98;
 }
 
 .button.btn-zen-outline.btn-retry-fallback {
-  -fx-background-color: rgba(255, 183, 77, 0.18);
-  -fx-border-color: rgba(230, 81, 0, 0.36);
+  -fx-background-color: linear-gradient(to bottom, rgba(255, 193, 7, 0.22) 0%, rgba(255, 152, 0, 0.15) 100%);
+  -fx-border-color: rgba(255, 152, 0, 0.45);
   -fx-text-fill: #e65100;
 }
 
 .button.btn-zen-outline.btn-retry-fallback:hover {
-  -fx-background-color: rgba(255, 183, 77, 0.28);
-  -fx-border-color: rgba(230, 81, 0, 0.46);
+  -fx-background-color: linear-gradient(to bottom, rgba(255, 193, 7, 0.32) 0%, rgba(255, 152, 0, 0.25) 100%);
+  -fx-border-color: rgba(255, 152, 0, 0.55);
   -fx-text-fill: #bf360c;
 }
 
 .button.btn-zen-soft {
   -fx-background-radius: 999;
-  -fx-padding: 0 18;
-  -fx-background-color: rgba(69, 90, 100, 0.08);
-  -fx-text-fill: #455a64;
+  -fx-padding: 0 20;
+  -fx-background-color: linear-gradient(to right, rgba(93, 123, 138, 0.1) 0%, rgba(93, 123, 138, 0.06) 100%);
+  -fx-text-fill: #37474f;
   -fx-border-color: transparent;
 }
 
 .button.btn-zen-soft:hover {
-  -fx-background-color: rgba(69, 90, 100, 0.13);
-  -fx-translate-y: -0.5;
+  -fx-background-color: linear-gradient(to right, rgba(93, 123, 138, 0.16) 0%, rgba(93, 123, 138, 0.1) 100%);
+  -fx-translate-y: -1;
 }
 
 .button.btn-zen-soft:pressed {
-  -fx-background-color: rgba(69, 90, 100, 0.18);
+  -fx-background-color: linear-gradient(to right, rgba(93, 123, 138, 0.2) 0%, rgba(93, 123, 138, 0.14) 100%);
   -fx-translate-y: 0;
-  -fx-scale-x: 0.985;
-  -fx-scale-y: 0.985;
+  -fx-scale-x: 0.98;
+  -fx-scale-y: 0.98;
 }
 
 .button.btn-zen-ghost {
   -fx-background-radius: 999;
-  -fx-padding: 0 14;
+  -fx-padding: 0 16;
   -fx-background-color: transparent;
-  -fx-text-fill: #78909c;
+  -fx-text-fill: #607d8b;
   -fx-border-color: transparent;
 }
 
 .button.btn-zen-ghost:hover {
-  -fx-text-fill: #455a64;
-  -fx-background-color: rgba(69, 90, 100, 0.05);
-  -fx-translate-y: -0.5;
+  -fx-text-fill: #37474f;
+  -fx-background-color: rgba(69, 90, 100, 0.06);
+  -fx-translate-y: -1;
 }
 
 .button.btn-zen-ghost:pressed {
   -fx-translate-y: 0;
-  -fx-scale-x: 0.985;
-  -fx-scale-y: 0.985;
+  -fx-scale-x: 0.98;
+  -fx-scale-y: 0.98;
 }
 
 .button.btn-zen-danger {
   -fx-background-radius: 999;
-  -fx-padding: 0 14;
+  -fx-padding: 0 16;
   -fx-background-color: transparent;
-  -fx-text-fill: #c62828;
+  -fx-text-fill: #d32f2f;
   -fx-border-color: transparent;
 }
 
 .button.btn-zen-danger:hover {
-  -fx-background-color: rgba(198, 40, 40, 0.06);
-  -fx-translate-y: -0.5;
+  -fx-background-color: rgba(211, 47, 47, 0.08);
+  -fx-translate-y: -1;
 }
 
 .button.btn-zen-danger:pressed {
   -fx-translate-y: 0;
-  -fx-scale-x: 0.985;
-  -fx-scale-y: 0.985;
+  -fx-scale-x: 0.98;
+  -fx-scale-y: 0.98;
 }
 
 /* 兼容旧类名（若仍有引用） */
 .button.btn-primary {
   -fx-background-radius: 999;
-  -fx-padding: 0 22;
-  -fx-background-color: #455a64;
+  -fx-padding: 0 24;
+  -fx-background-color: linear-gradient(to bottom, #5d7b8a 0%, #455a64 100%);
   -fx-text-fill: #faf9f5;
-  -fx-effect: dropshadow(gaussian, rgba(38, 50, 56, 0.2), 6, 0.25, 0, 1);
+  -fx-effect: dropshadow(gaussian, rgba(38, 50, 56, 0.25), 8, 0.3, 0, 2);
 }
 
 .button.btn-primary:hover {
-  -fx-translate-y: -0.5;
+  -fx-translate-y: -1;
 }
 
 .button.btn-primary:pressed {
   -fx-translate-y: 0;
-  -fx-scale-x: 0.985;
-  -fx-scale-y: 0.985;
+  -fx-scale-x: 0.98;
+  -fx-scale-y: 0.98;
 }
 
 .button.btn-secondary {
   -fx-background-radius: 999;
-  -fx-padding: 0 16;
-  -fx-background-color: #ebe8e0;
-  -fx-text-fill: #546e7a;
-  -fx-border-color: rgba(69, 90, 100, 0.2);
+  -fx-padding: 0 18;
+  -fx-background-color: linear-gradient(to bottom, #f0ece5 0%, #e8e4dd 100%);
+  -fx-text-fill: #455a64;
+  -fx-border-color: rgba(69, 90, 100, 0.25);
   -fx-border-width: 1;
 }
 
 .button.btn-secondary:hover {
-  -fx-translate-y: -0.5;
+  -fx-translate-y: -1;
 }
 
 .button.btn-secondary:pressed {
   -fx-translate-y: 0;
-  -fx-scale-x: 0.985;
-  -fx-scale-y: 0.985;
+  -fx-scale-x: 0.98;
+  -fx-scale-y: 0.98;
 }
 
 .button.btn-accent {
   -fx-background-radius: 999;
-  -fx-padding: 0 16;
-  -fx-background-color: rgba(69, 90, 100, 0.1);
-  -fx-text-fill: #455a64;
+  -fx-padding: 0 18;
+  -fx-background-color: linear-gradient(to right, rgba(93, 123, 138, 0.12) 0%, rgba(93, 123, 138, 0.08) 100%);
+  -fx-text-fill: #37474f;
 }
 
 .button.btn-accent:hover {
-  -fx-translate-y: -0.5;
+  -fx-translate-y: -1;
 }
 
 .button.btn-accent:pressed {
   -fx-translate-y: 0;
-  -fx-scale-x: 0.985;
-  -fx-scale-y: 0.985;
+  -fx-scale-x: 0.98;
+  -fx-scale-y: 0.98;
 }
 
 .button.btn-danger {
   -fx-background-radius: 999;
   -fx-background-color: transparent;
+  -fx-text-fill: #d32f2f;
+}
+
+.button.btn-danger:hover {
+  -fx-background-color: rgba(211, 47, 47, 0.08);
+}
+
+.button.btn-danger:pressed {
+  -fx-translate-y: 0;
+  -fx-scale-x: 0.98;
+  -fx-scale-y: 0.98;
+}
+
+.button:disabled {
+  -fx-opacity: 0.45;
+  -fx-background-color: rgba(69, 90, 100, 0.08);
+  -fx-text-fill: #b0bec5;
+  -fx-border-color: transparent;
+  -fx-effect: null;
+  -fx-cursor: default;
+}
+
+.button.btn-zen-hero:disabled {
+  -fx-background-color: linear-gradient(to bottom right, #bdbdbd 0%, #9e9e9e 100%);
+  -fx-effect: null;
+}
+
+/* —— 进度条 —— */
+.progress-bar {
+  -fx-min-height: 7;
+  -fx-max-height: 7;
+  -fx-background-radius: 4;
+  -fx-background-color: rgba(69, 90, 100, 0.12);
+  -fx-padding: 0;
+}
+
+.progress-bar .track {
+  -fx-background-color: rgba(69, 90, 100, 0.12);
+  -fx-background-radius: 4;
+}
+
+.progress-bar .bar {
+  -fx-background-radius: 4;
+  -fx-background-color: linear-gradient(to right, #42a5f5 0%, #26c6da 50%, #4db6ac 100%);
+  -fx-padding: 0;
+}
+
+.progress-bar:disabled {
+  -fx-opacity: 0.35;
+}
+
+/* —— Tooltip —— */
+.tooltip {
+  -fx-font-family: "LXGW WenKai GB Screen", "Inter", "Microsoft YaHei UI", sans-serif;
+  -fx-font-size: 11.5px;
+  -fx-background-color: linear-gradient(to bottom, #37474f 0%, #263238 100%);
+  -fx-text-fill: #faf9f5;
+  -fx-background-radius: 10;
+  -fx-padding: 9 13 9 13;
+  -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.22), 10, 0.3, 0, 3);
+}
+
+/* —— 任务列表单元格增强 —— */
+.job-cell-status {
+  -fx-font-size: 13.5px;
+  -fx-min-width: 22;
+  -fx-alignment: center;
+}
+
+.job-cell-concept {
+  -fx-font-size: 12.5px;
+  -fx-text-fill: #263238;
+  -fx-wrap-text: true;
+}
+
+.job-cell-meta {
+  -fx-font-family: "Inter", "Segoe UI", "Microsoft YaHei UI", sans-serif;
+  -fx-font-size: 10.5px;
+  -fx-text-fill: #b0bec5;
+  -fx-letter-spacing: 0.08em;
+}
+
+.list-view .list-cell {
+  -fx-padding: 11 13 11 13;
+}
+
+.list-view .list-cell:filled {
+  -fx-cell-size: -1;
+}
+
+/* —— 输入框字数统计 —— */
+.char-count-label {
+  -fx-font-family: "JetBrains Mono", "Cascadia Code", "Consolas", monospace;
+  -fx-font-size: 10px;
+  -fx-text-fill: #b0bec5;
+}
+
+.char-count-label.char-count-near-limit {
+  -fx-text-fill: #ff7043;
+}
+
+.char-count-label.char-count-at-limit {
+  -fx-text-fill: #d32f2f;
+  -fx-font-weight: 700;
+}
+
+/* —— 空状态占位 —— */
+.empty-state-icon {
+  -fx-text-fill: #cfd8dc;
+  -fx-font-size: 34px;
+}
+
+.empty-state-text {
+  -fx-font-size: 12.5px;
+  -fx-text-fill: #b0bec5;
+  -fx-wrap-text: true;
+  -fx-text-alignment: center;
+}
+
+/* —— 摘要卡片行内标签 —— */
+.summary-tag {
+  -fx-font-family: "Inter", "Segoe UI", "Microsoft YaHei UI", sans-serif;
+  -fx-font-size: 10px;
+  -fx-font-weight: 600;
+  -fx-letter-spacing: 0.1em;
+  -fx-padding: 4 9 4 9;
+  -fx-background-radius: 999;
+  -fx-border-radius: 999;
+}
+
+.summary-tag-fallback {
+  -fx-background-color: linear-gradient(to right, rgba(255, 193, 7, 0.35) 0%, rgba(255, 152, 0, 0.25) 100%);
+  -fx-text-fill: #e65100;
+  -fx-border-color: rgba(255, 152, 0, 0.4);
+  -fx-border-width: 1;
+}
+
+.summary-tag-success {
+  -fx-background-color: linear-gradient(to right, rgba(76, 175, 80, 0.22) 0%, rgba(56, 142, 60, 0.15) 100%);
+  -fx-text-fill: #2e7d32;
+  -fx-border-color: rgba(46, 125, 50, 0.3);
+  -fx-border-width: 1;
+}
+
+.summary-tag-failed {
+  -fx-background-color: linear-gradient(to right, rgba(244, 67, 54, 0.22) 0%, rgba(211, 47, 47, 0.15) 100%);
   -fx-text-fill: #c62828;
+  -fx-border-color: rgba(211, 47, 47, 0.3);
+  -fx-border-width: 1;
+}
+
+/* —— 加载中旋转指示 —— */
+.spinner-dot {
+  -fx-background-color: linear-gradient(to bottom, #5d7b8a 0%, #455a64 100%);
+  -fx-background-radius: 999;
+}
+
+/* —— 设置页面增强 —— */
+.settings-section-card {
+  -fx-padding: 20 22 20 22;
+  -fx-spacing: 14;
+}
+
+.settings-section-card .text-field,
+.settings-section-card .password-field {
+  -fx-min-height: 40;
+}
+
+.settings-section-card .button {
+  -fx-min-height: 38;
+}
+
+/* —— Tab 页签增强 —— */
+.zen-tab-pane .tab-header-area .tab {
+  -fx-padding: 16 24 14 24;
+}
+
+.zen-tab-pane .tab-header-area .tab:selected {
+  -fx-border-width: 0 0 3 0;
+  -fx-border-color: transparent transparent #5d7b8a transparent;
+}
+
+/* —— 列表滚动条增强 —— */
+.list-view .scroll-bar:vertical .thumb {
+  -fx-background-color: rgba(69, 90, 100, 0.22);
+  -fx-background-radius: 5;
+}
+
+.list-view .scroll-bar:vertical .thumb:hover {
+  -fx-background-color: rgba(69, 90, 100, 0.35);
+}
+
+/* —— 输出日志区域 —— */
+.text-area.log-view {
+  -fx-font-size: 12px;
+  -fx-line-spacing: 4;
+}
+
+/* —— 生成按钮加载态 —— */
+.button.btn-zen-hero.btn-loading {
+  -fx-background-color: linear-gradient(to bottom right, #b0bec5 0%, #90a4ae 100%);
+  -fx-effect: null;
+  -fx-opacity: 0.8;
+}
+
+/* —— 搜索框增强 —— */
+.history-search-field {
+  -fx-min-width: 190;
+  -fx-min-height: 34;
+}
+
+.history-search-field .text-field {
+  -fx-min-height: 34;
+}
+
+/* —— 批量操作栏增强 —— */
+.batch-operation-bar {
+  -fx-padding: 12 14 12 14;
+}
+
+/* —— 失败卡片增强 —— */
+.output-failure-card {
+  -fx-padding: 14 16 14 16;
 }

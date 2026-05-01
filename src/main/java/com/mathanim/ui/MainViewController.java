@@ -86,6 +86,8 @@ import javafx.geometry.Pos;
 
 import javafx.scene.control.PasswordField;
 
+import javafx.scene.control.ProgressBar;
+
 import javafx.scene.control.ScrollPane;
 
 import javafx.scene.control.Slider;
@@ -152,7 +154,11 @@ import org.slf4j.LoggerFactory;
 
 import org.springframework.stereotype.Component;
 
+import org.springframework.data.domain.Page;
 
+import org.springframework.data.domain.PageRequest;
+
+import org.springframework.data.domain.Pageable;
 
 import java.io.IOException;
 
@@ -170,6 +176,8 @@ import java.util.ArrayList;
 
 import java.util.Base64;
 
+import java.util.HashMap;
+
 import java.util.LinkedHashMap;
 
 import java.util.List;
@@ -178,6 +186,10 @@ import java.util.Locale;
 
 import java.util.Map;
 
+import java.util.concurrent.CountDownLatch;
+
+import java.util.concurrent.ConcurrentHashMap;
+
 import java.util.concurrent.ExecutorService;
 
 import java.util.Optional;
@@ -185,6 +197,12 @@ import java.util.Optional;
 import java.util.ResourceBundle;
 
 import java.util.UUID;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import java.util.concurrent.atomic.AtomicLong;
+
+import java.util.function.BooleanSupplier;
 
 import java.util.function.Consumer;
 
@@ -217,6 +235,12 @@ public class MainViewController implements Initializable {
   private final GeogebraAiService geogebraAiService;
 
   private final ExecutorService manimExecutorService;
+  private final SharedState sharedState;
+
+  @FXML private StudioController studioPaneController;
+  @FXML private OutputController outputPaneController;
+  @FXML private GeogebraController geogebraPaneController;
+  @FXML private SettingsController settingsPaneController;
 
 
 
@@ -282,6 +306,12 @@ public class MainViewController implements Initializable {
 
   @FXML private Label outputStatusLabel;
 
+  @FXML private HBox outputProgressBox;
+
+  @FXML private ProgressBar outputProgressBar;
+
+  @FXML private Label outputProgressLabel;
+
   @FXML private Label outputFallbackBadgeLabel;
 
   @FXML private Label outputSummaryStateLabel;
@@ -291,6 +321,8 @@ public class MainViewController implements Initializable {
   @FXML private Label outputSummaryCountLabel;
 
   @FXML private Label historyCountLabel;
+
+  @FXML private Label conceptCharCount;
 
 
 
@@ -434,11 +466,44 @@ public class MainViewController implements Initializable {
 
   private double resizeStartWinX;
 
-  private final Map<UUID, StringBuilder> jobLogBuffers = new LinkedHashMap<>();
+  private static final int JOB_LOG_LRU_MAX = 50;
+
+  private final Map<UUID, StringBuilder> jobLogBuffers = new LinkedHashMap<>(64, 0.75f, true) {
+    @Override
+    protected boolean removeEldestEntry(Map.Entry<UUID, StringBuilder> eldest) {
+      return size() > JOB_LOG_LRU_MAX;
+    }
+  };
+
+  private final Map<UUID, Integer> jobProgress = new HashMap<>();
+
+  private static final int JOB_PAGE_SIZE = 50;
+
+  private final ConcurrentHashMap<UUID, ActivePipelineState> activePipelines = new ConcurrentHashMap<>();
+
+  private int jobListPage = 0;
+
+  private boolean jobListHasMore = true;
+
+  private String currentSearchKeyword = "";
+
+  private String currentFilterName = "全部";
+
+  private long totalJobCount = 0;
+
+  private final AtomicLong jobListQueryGeneration = new AtomicLong();
+
+  private final AtomicBoolean jobPageLoadInFlight = new AtomicBoolean(false);
 
   private final StringBuilder sessionLogBuffer = new StringBuilder();
 
   private final java.util.Set<UUID> selectedJobIds = new java.util.HashSet<>();
+
+  private static final class ActivePipelineState {
+    private final AtomicBoolean cancelRequested = new AtomicBoolean(false);
+  }
+
+  private record JobPageResult(List<RenderJob> jobs, long totalCount, boolean hasMore) {}
 
 
 
@@ -458,7 +523,9 @@ public class MainViewController implements Initializable {
 
       GeogebraAiService geogebraAiService,
 
-      ExecutorService manimExecutorService) {
+      ExecutorService manimExecutorService,
+
+      SharedState sharedState) {
 
     this.renderJobService = renderJobService;
 
@@ -476,6 +543,8 @@ public class MainViewController implements Initializable {
 
     this.manimExecutorService = manimExecutorService;
 
+    this.sharedState = sharedState;
+
   }
 
 
@@ -483,6 +552,7 @@ public class MainViewController implements Initializable {
   @Override
 
   public void initialize(URL location, ResourceBundle resources) {
+    bindSubviewControllers();
 
     outputModeChoice.setItems(FXCollections.observableArrayList(OutputMode.values()));
 
@@ -929,6 +999,7 @@ public class MainViewController implements Initializable {
         .addListener(
 
             (obs, oldV, job) -> {
+              sharedState.setSelectedJob(job);
 
               if (job == null) {
 
@@ -1036,6 +1107,126 @@ public class MainViewController implements Initializable {
 
     initializeSearchAndFilter();
 
+  }
+
+  private void bindSubviewControllers() {
+    if (studioPaneController != null) {
+      studioPaneController.setActionHandler(this::dispatchSubviewAction);
+      conceptInput = studioPaneController.getConceptInput();
+      modeDirectToggle = studioPaneController.getModeDirectToggle();
+      modeTutorToggle = studioPaneController.getModeTutorToggle();
+      directModePane = studioPaneController.getDirectModePane();
+      tutorModePane = studioPaneController.getTutorModePane();
+      problemInput = studioPaneController.getProblemInput();
+      solutionInput = studioPaneController.getSolutionInput();
+      answerInput = studioPaneController.getAnswerInput();
+      exampleCombo = studioPaneController.getExampleCombo();
+      outputModeChoice = studioPaneController.getOutputModeChoice();
+      videoQualityChoice = studioPaneController.getVideoQualityChoice();
+      promptLocaleChoice = studioPaneController.getPromptLocaleChoice();
+      useProblemFramingCheck = studioPaneController.getUseProblemFramingCheck();
+      useTwoStageCheck = studioPaneController.getUseTwoStageCheck();
+      reliableGenerationCheck = studioPaneController.getReliableGenerationCheck();
+      allowFallbackModeCheck = studioPaneController.getAllowFallbackModeCheck();
+      oneClickGenerateButton = studioPaneController.getOneClickGenerateButton();
+      referenceUrlsInput = studioPaneController.getReferenceUrlsInput();
+      promptOverridesJsonInput = studioPaneController.getPromptOverridesJsonInput();
+      problemPlanPreview = studioPaneController.getProblemPlanPreview();
+      codeInput = studioPaneController.getCodeInput();
+      editInstructionsInput = studioPaneController.getEditInstructionsInput();
+      studioStatusLabel = studioPaneController.getStudioStatusLabel();
+      conceptCharCount = studioPaneController.getConceptCharCount();
+    }
+    if (outputPaneController != null) {
+      outputPaneController.setActionHandler(this::dispatchSubviewAction);
+      outputStatusLabel = outputPaneController.getOutputStatusLabel();
+      outputProgressBox = outputPaneController.getOutputProgressBox();
+      outputProgressBar = outputPaneController.getOutputProgressBar();
+      outputProgressLabel = outputPaneController.getOutputProgressLabel();
+      outputFallbackBadgeLabel = outputPaneController.getOutputFallbackBadgeLabel();
+      outputSummaryStateLabel = outputPaneController.getOutputSummaryStateLabel();
+      outputSummaryNextStepLabel = outputPaneController.getOutputSummaryNextStepLabel();
+      outputSummaryCountLabel = outputPaneController.getOutputSummaryCountLabel();
+      outputPreviewStack = outputPaneController.getOutputPreviewStack();
+      outputMediaView = outputPaneController.getOutputMediaView();
+      outputImageScroll = outputPaneController.getOutputImageScroll();
+      outputImageView = outputPaneController.getOutputImageView();
+      outputPreviewPlaceholder = outputPaneController.getOutputPreviewPlaceholder();
+      outputPreviewPathLabel = outputPaneController.getOutputPreviewPathLabel();
+      outputPreviewFullscreenButton = outputPaneController.getOutputPreviewFullscreenButton();
+      outputVideoTransport = outputPaneController.getOutputVideoTransport();
+      outputPreviewSeek = outputPaneController.getOutputPreviewSeek();
+      outputPreviewTimeLabel = outputPaneController.getOutputPreviewTimeLabel();
+      outputPreviewPlayToggle = outputPaneController.getOutputPreviewPlayToggle();
+      outputFailureCard = outputPaneController.getOutputFailureCard();
+      outputFailureMetaLabel = outputPaneController.getOutputFailureMetaLabel();
+      outputFailureSummaryLabel = outputPaneController.getOutputFailureSummaryLabel();
+      outputLogArea = outputPaneController.getOutputLogArea();
+      HistoryController historyPaneController = outputPaneController.getHistoryPaneController();
+      if (historyPaneController != null) {
+        historyPaneController.setActionHandler(this::dispatchSubviewAction);
+        jobList = historyPaneController.getJobList();
+        jobSearchField = historyPaneController.getJobSearchField();
+        jobFilterChoice = historyPaneController.getJobFilterChoice();
+        jobToggleFavoriteButton = historyPaneController.getJobToggleFavoriteButton();
+        batchOperationBar = historyPaneController.getBatchOperationBar();
+        batchSelectionLabel = historyPaneController.getBatchSelectionLabel();
+        historyCountLabel = historyPaneController.getHistoryCountLabel();
+      }
+    }
+    if (geogebraPaneController != null) {
+      geogebraPaneController.setActionHandler(this::dispatchSubviewAction);
+      geogebraProblemInput = geogebraPaneController.getGeogebraProblemInput();
+      geogebraImageStatusLabel = geogebraPaneController.getGeogebraImageStatusLabel();
+      geogebraGenerateButton = geogebraPaneController.getGeogebraGenerateButton();
+      geogebraPickImageButton = geogebraPaneController.getGeogebraPickImageButton();
+      geogebraCommandsArea = geogebraPaneController.getGeogebraCommandsArea();
+      geogebraWebView = geogebraPaneController.getGeogebraWebView();
+      geogebraEnable3dCheck = geogebraPaneController.getGeogebraEnable3dCheck();
+    }
+    if (settingsPaneController != null) {
+      settingsPaneController.setActionHandler(this::dispatchSubviewAction);
+      settingsBaseUrl = settingsPaneController.getSettingsBaseUrl();
+      settingsApiKey = settingsPaneController.getSettingsApiKey();
+      settingsModel = settingsPaneController.getSettingsModel();
+      settingsMaxRetry = settingsPaneController.getSettingsMaxRetry();
+      settingsPython = settingsPaneController.getSettingsPython();
+      settingsTestAiButton = settingsPaneController.getSettingsTestAiButton();
+    }
+  }
+
+  private void dispatchSubviewAction(String action) {
+    switch (action) {
+      case "onOneClickGenerate" -> onOneClickGenerate();
+      case "onEnqueue" -> onEnqueue();
+      case "onCheckManim" -> onCheckManim();
+      case "onProblemFramingPreview" -> onProblemFramingPreview();
+      case "onAiWorkflow" -> onAiWorkflow();
+      case "onRunBuiltinTest" -> onRunBuiltinTest();
+      case "onCancelJob" -> onCancelJob();
+      case "onModifyAndRun" -> onModifyAndRun();
+      case "onOutputPreviewFullscreen" -> onOutputPreviewFullscreen();
+      case "onPreviewPlayToggle" -> onPreviewPlayToggle();
+      case "onCopyOutputLog" -> onCopyOutputLog();
+      case "onClearOutputLog" -> onClearOutputLog();
+      case "onViewJobConcept" -> onViewJobConcept();
+      case "onCopyJobConcept" -> onCopyJobConcept();
+      case "onDeleteJob" -> onDeleteJob();
+      case "onToggleFavorite" -> onToggleFavorite();
+      case "onBatchDelete" -> onBatchDelete();
+      case "onBatchRetry" -> onBatchRetry();
+      case "onBatchRetryFallback" -> onBatchRetryFallback();
+      case "onSaveSettings" -> onSaveSettings();
+      case "onReloadSettings" -> onReloadSettings();
+      case "onTestAiConnection" -> onTestAiConnection();
+      case "onGeogebraPickImage" -> onGeogebraPickImage();
+      case "onGeogebraClearImage" -> onGeogebraClearImage();
+      case "onGeogebraGenerate" -> onGeogebraGenerate();
+      case "onGeogebraCopyCommands" -> onGeogebraCopyCommands();
+      case "onGeogebraReapplyCommands" -> onGeogebraReapplyCommands();
+      case "onGeogebraReloadHost" -> onGeogebraReloadHost();
+      default -> log.warn("未知子视图动作: {}", action);
+    }
   }
 
 
@@ -2598,9 +2789,7 @@ public class MainViewController implements Initializable {
 
                     jobList.getSelectionModel().select(0);
 
-                    renderJobService.runAiWorkflowAsync(
-
-                        job.getId(), jobUiLog(job.getId()), this::touchUi);
+                    startAiWorkflow(job.getId());
 
                   });
 
@@ -2798,7 +2987,7 @@ public class MainViewController implements Initializable {
 
     appendJobLog(selected.getId(), "--- 运行内置测试: " + selected.getId() + " ---");
 
-    renderJobService.runBuiltinTestAsync(selected.getId(), jobUiLog(selected.getId()), this::touchUi);
+    startBuiltinTest(selected.getId());
 
   }
 
@@ -2820,7 +3009,7 @@ public class MainViewController implements Initializable {
 
     appendJobLog(selected.getId(), "--- 执行选中任务: " + selected.getId() + " ---");
 
-    renderJobService.runAiWorkflowAsync(selected.getId(), jobUiLog(selected.getId()), this::touchUi);
+    startAiWorkflow(selected.getId());
 
   }
 
@@ -2884,7 +3073,7 @@ public class MainViewController implements Initializable {
 
     refreshList();
 
-    renderJobService.runAiWorkflowAsync(job.getId(), jobUiLog(job.getId()), this::touchUi);
+    startAiWorkflow(job.getId());
 
   }
 
@@ -2902,6 +3091,11 @@ public class MainViewController implements Initializable {
 
       return;
 
+    }
+
+    ActivePipelineState state = activePipelines.get(selected.getId());
+    if (state != null) {
+      state.cancelRequested.set(true);
     }
 
     appendJobLog(selected.getId(), "--- 请求取消任务 ---");
@@ -3164,9 +3358,11 @@ public class MainViewController implements Initializable {
 
     }
 
+    StringBuilder resultBuffer = new StringBuilder();
+
     appendLog("正在测试 AI 连接: " + base + " · " + model);
 
-    appendLog("（本测试仅为纯文本一条消息；不检测题目图/多模态。若 GeoGebra 带图报 image_url 错误，请换支持视觉的模型。）");
+    appendLog("（本测试仅验证纯文本应答；不检测题目图/多模态能力。）");
 
     renderJobService.testAiConnectionAsync(
 
@@ -3176,13 +3372,39 @@ public class MainViewController implements Initializable {
 
         model,
 
-        sessionUiLog(),
+        msg ->
+
+            Platform.runLater(
+
+                () -> {
+
+                  if (resultBuffer.length() > 0) {
+
+                    resultBuffer.append(System.lineSeparator()).append(System.lineSeparator());
+
+                  }
+
+                  resultBuffer.append(msg);
+
+                }),
 
         () ->
 
             Platform.runLater(
 
                 () -> {
+
+                  String resultText = resultBuffer.toString().strip();
+
+                  if (resultText.isBlank()) {
+
+                    resultText = "AI 连接测试已结束，但没有返回结果。";
+
+                  }
+
+                  appendLog(resultText);
+
+                  showAiTestResultDialog(base, model, resultText);
 
                   if (settingsTestAiButton != null) {
 
@@ -3191,6 +3413,42 @@ public class MainViewController implements Initializable {
                   }
 
                 }));
+
+  }
+
+  private void showAiTestResultDialog(String baseUrl, String model, String resultText) {
+
+    boolean success = resultText != null && resultText.startsWith("AI 连接正常");
+
+    Alert alert = new Alert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR);
+
+    alert.setTitle(success ? "AI 连接成功" : "AI 连接失败");
+
+    alert.setHeaderText(model + " · " + baseUrl);
+
+    TextArea ta = new TextArea(resultText == null ? "" : resultText);
+
+    ta.setEditable(false);
+
+    ta.setWrapText(true);
+
+    ta.setPrefRowCount(10);
+
+    ta.setPrefWidth(560);
+
+    alert.getDialogPane().setContent(ta);
+
+    alert.getDialogPane().setPrefWidth(620);
+
+    var css = MainViewController.class.getResource("/css/mathanim-theme.css");
+
+    if (css != null) {
+
+      alert.getDialogPane().getStylesheets().add(css.toExternalForm());
+
+    }
+
+    alert.showAndWait();
 
   }
 
@@ -3356,6 +3614,156 @@ public class MainViewController implements Initializable {
 
   }
 
+  private Consumer<Integer> jobUiProgress(UUID jobId) {
+
+    return progress ->
+
+        Platform.runLater(
+
+            () -> {
+
+              if (!isPipelineActive(jobId)) {
+
+                return;
+
+              }
+
+              if (progress == null) {
+
+                return;
+
+              }
+
+              int normalized = Math.max(0, Math.min(progress, 100));
+
+              jobProgress.put(jobId, normalized);
+
+              refreshList();
+
+            });
+
+  }
+
+  private BooleanSupplier jobTimeoutDecision(UUID jobId) {
+
+    return () -> isPipelineCancellationRequested(jobId) ? false : confirmRenderTimeout(jobId);
+
+  }
+
+  private boolean confirmRenderTimeout(UUID jobId) {
+
+    AtomicBoolean keepWaiting = new AtomicBoolean(false);
+
+    CountDownLatch latch = new CountDownLatch(1);
+
+    Platform.runLater(
+
+        () -> {
+
+          try {
+
+            Alert alert = new Alert(Alert.AlertType.WARNING);
+
+            alert.setTitle("渲染可能卡住");
+
+            alert.setHeaderText("任务渲染超过预设时限");
+
+            alert.setContentText("任务 " + jobId + " 仍未完成。你可以继续等待，或立即取消这次渲染。");
+
+            ButtonType waitButton = new ButtonType("继续等待");
+
+            ButtonType cancelButton = new ButtonType("取消渲染");
+
+            alert.getButtonTypes().setAll(waitButton, cancelButton);
+
+            ButtonType selected =
+
+                alert.showAndWait().orElse(cancelButton);
+
+            keepWaiting.set(selected == waitButton);
+
+            appendJobLog(jobId, keepWaiting.get() ? "检测到超时，已选择继续等待。" : "检测到超时，已选择取消渲染。");
+
+          } finally {
+
+            latch.countDown();
+
+          }
+
+        });
+
+    try {
+
+      latch.await();
+
+    } catch (InterruptedException e) {
+
+      Thread.currentThread().interrupt();
+
+      return false;
+
+    }
+
+    return keepWaiting.get();
+
+  }
+
+  private void startBuiltinTest(UUID jobId) {
+    ActivePipelineState state = registerActivePipeline(jobId);
+    if (state == null) {
+      appendJobLog(jobId, "该任务已在运行中，忽略重复启动。");
+      return;
+    }
+
+    renderJobService.runBuiltinTestAsync(
+
+        jobId,
+        jobUiLog(jobId),
+        jobUiProgress(jobId),
+        jobTimeoutDecision(jobId),
+        () -> finishActivePipeline(jobId, state));
+
+  }
+
+  private void startAiWorkflow(UUID jobId) {
+    ActivePipelineState state = registerActivePipeline(jobId);
+    if (state == null) {
+      appendJobLog(jobId, "该任务已在运行中，忽略重复启动。");
+      return;
+    }
+
+    renderJobService.runAiWorkflowAsync(
+
+        jobId,
+        jobUiLog(jobId),
+        jobUiProgress(jobId),
+        jobTimeoutDecision(jobId),
+        () -> finishActivePipeline(jobId, state));
+
+  }
+
+  private ActivePipelineState registerActivePipeline(UUID jobId) {
+    ActivePipelineState state = new ActivePipelineState();
+    return activePipelines.putIfAbsent(jobId, state) == null ? state : null;
+  }
+
+  private void finishActivePipeline(UUID jobId, ActivePipelineState state) {
+    activePipelines.remove(jobId, state);
+    Platform.runLater(() -> {
+      jobProgress.remove(jobId);
+      refreshList();
+    });
+  }
+
+  private boolean isPipelineActive(UUID jobId) {
+    return jobId != null && activePipelines.containsKey(jobId);
+  }
+
+  private boolean isPipelineCancellationRequested(UUID jobId) {
+    ActivePipelineState state = activePipelines.get(jobId);
+    return state != null && state.cancelRequested.get();
+  }
+
 
 
   private void appendSessionLog(String msg) {
@@ -3499,6 +3907,14 @@ public class MainViewController implements Initializable {
     if (job.getProcessingStage() != null && job.getProcessingStage() != ProcessingStage.NONE) {
 
       tip.append("\n阶段: ").append(formatProcessingStageZh(job.getProcessingStage()));
+
+    }
+
+    Integer progress = jobProgress.get(job.getId());
+
+    if (progress != null && job.getStatus() == JobStatus.PROCESSING) {
+
+      tip.append("\n渲染进度: ").append(progress).append('%');
 
     }
 
@@ -3758,9 +4174,7 @@ public class MainViewController implements Initializable {
 
                   jobList.getSelectionModel().select(retried);
 
-                  renderJobService.runAiWorkflowAsync(
-
-                      retried.getId(), jobUiLog(retried.getId()), this::touchUi);
+                  startAiWorkflow(retried.getId());
 
                 }),
 
@@ -4029,8 +4443,27 @@ public class MainViewController implements Initializable {
 
 
   private void refreshList() {
+    JobPageResult result = fetchJobPage(currentSearchKeyword, currentFilterName, 0, JOB_PAGE_SIZE);
+    jobListQueryGeneration.incrementAndGet();
+    jobPageLoadInFlight.set(false);
+    jobListPage = 0;
+    List<RenderJob> list = result.jobs();
+    totalJobCount = result.totalCount();
+    jobListHasMore = result.hasMore();
 
-    List<RenderJob> list = renderJobService.listRecent();
+    jobProgress
+
+        .keySet()
+
+        .removeIf(
+
+            id ->
+
+                list.stream()
+
+                    .noneMatch(
+
+                        job -> job.getId().equals(id) && job.getStatus() == JobStatus.PROCESSING));
 
     RenderJob selected = jobList.getSelectionModel().getSelectedItem();
 
@@ -4088,9 +4521,101 @@ public class MainViewController implements Initializable {
 
     updateRetryButtons();
 
+    updateHistoryCountLabel();
+
   }
 
 
+
+  private void updateHistoryCountLabel() {
+    if (historyCountLabel != null) {
+      historyCountLabel.setText(String.format("%02d", totalJobCount));
+    }
+  }
+
+  private void loadMoreJobPages() {
+    if (!jobListHasMore || !jobPageLoadInFlight.compareAndSet(false, true)) {
+      return;
+    }
+    String keyword = currentSearchKeyword;
+    String filter = currentFilterName;
+    long generation = jobListQueryGeneration.get();
+    int nextPage = jobListPage + 1;
+    try {
+      JobPageResult result = fetchJobPage(keyword, filter, nextPage, JOB_PAGE_SIZE);
+      Platform.runLater(() -> {
+        try {
+          if (generation != jobListQueryGeneration.get()
+              || !keyword.equals(currentSearchKeyword)
+              || !filter.equals(currentFilterName)) {
+            return;
+          }
+          jobListPage = nextPage;
+          jobListHasMore = result.hasMore();
+          totalJobCount = result.totalCount();
+          if (!result.jobs().isEmpty()) {
+            jobList.getItems().addAll(result.jobs());
+          }
+          updateHistoryCountLabel();
+        } finally {
+          jobPageLoadInFlight.set(false);
+        }
+      });
+    } catch (RuntimeException e) {
+      Platform.runLater(() -> appendLog("加载更多任务失败: " + e.getMessage()));
+      jobPageLoadInFlight.set(false);
+    }
+  }
+
+  private JobPageResult fetchJobPage(String keyword, String filter, int pageIndex, int pageSize) {
+    String normalizedKeyword = keyword != null ? keyword : "";
+    String normalizedFilter = filter != null ? filter : "全部";
+    Pageable pageable = PageRequest.of(pageIndex, pageSize);
+    if ("收藏".equals(normalizedFilter)) {
+      List<RenderJob> filtered =
+          renderJobService.listFavorited().stream()
+              .filter(
+                  j ->
+                      normalizedKeyword.isBlank()
+                          || (j.getConcept() != null
+                              && j.getConcept().toLowerCase(Locale.ROOT)
+                                  .contains(normalizedKeyword.toLowerCase(Locale.ROOT))))
+              .toList();
+      return sliceInMemory(filtered, pageIndex, pageSize);
+    }
+    if ("保底".equals(normalizedFilter)) {
+      List<RenderJob> filtered =
+          renderJobService.searchAndFilter(normalizedKeyword, null).stream()
+              .filter(RenderJob::isFallbackModeActive)
+              .toList();
+      return sliceInMemory(filtered, pageIndex, pageSize);
+    }
+    if ("草稿".equals(normalizedFilter)) {
+      List<RenderJob> filtered =
+          renderJobService.searchAndFilter(normalizedKeyword, null).stream()
+              .filter(j -> "草稿".equals(displayJobState(j)))
+              .toList();
+      return sliceInMemory(filtered, pageIndex, pageSize);
+    }
+    JobStatus status = resolveFilterStatus(normalizedFilter);
+    Page<RenderJob> page = renderJobService.searchAndFilterPaged(normalizedKeyword, status, pageable);
+    return new JobPageResult(page.getContent(), page.getTotalElements(), page.hasNext());
+  }
+
+  private static JobPageResult sliceInMemory(List<RenderJob> jobs, int pageIndex, int pageSize) {
+    int from = Math.min(pageIndex * pageSize, jobs.size());
+    int to = Math.min(from + pageSize, jobs.size());
+    boolean hasMore = to < jobs.size();
+    return new JobPageResult(jobs.subList(from, to), jobs.size(), hasMore);
+  }
+
+  private JobStatus resolveFilterStatus(String filter) {
+    return switch (filter) {
+      case "成功" -> JobStatus.COMPLETED;
+      case "失败" -> JobStatus.FAILED;
+      default -> null;
+    };
+  }
 
   private void updateChrome(List<RenderJob> jobs) {
 
@@ -4144,15 +4669,21 @@ public class MainViewController implements Initializable {
 
         updateOutputStatusTooltip(j);
 
+        Integer renderProgress = jobProgress.get(j.getId());
+
+        String progressSuffix =
+
+            st == ProcessingStage.RENDERING && renderProgress != null ? " · " + renderProgress + "%" : "";
+
         if (j.isFallbackModeActive()) {
 
           updateFallbackBadge(true);
 
-          outputStatusLabel.setText("保底模式中" + suffix);
+          outputStatusLabel.setText("保底模式中" + suffix + progressSuffix);
 
         } else {
 
-          outputStatusLabel.setText("处理中" + suffix);
+          outputStatusLabel.setText("处理中" + suffix + progressSuffix);
 
         }
 
@@ -4210,7 +4741,7 @@ public class MainViewController implements Initializable {
 
         outputStatusLabel.setText("草稿任务");
 
-        historyCountLabel.setText(String.format("%02d", jobs.size()));
+        updateHistoryCountLabel();
 
         updateOutputSummary(jobs, focusJob);
 
@@ -4224,7 +4755,7 @@ public class MainViewController implements Initializable {
 
         outputStatusLabel.setText("生成失败");
 
-        historyCountLabel.setText(String.format("%02d", jobs.size()));
+        updateHistoryCountLabel();
 
         updateOutputSummary(jobs, focusJob);
 
@@ -4238,7 +4769,7 @@ public class MainViewController implements Initializable {
 
         outputStatusLabel.setText("排队中");
 
-        historyCountLabel.setText(String.format("%02d", jobs.size()));
+        updateHistoryCountLabel();
 
         updateOutputSummary(jobs, focusJob);
 
@@ -4272,9 +4803,59 @@ public class MainViewController implements Initializable {
 
     }
 
-    historyCountLabel.setText(String.format("%02d", jobs.size()));
+    updateHistoryCountLabel();
 
     updateOutputSummary(jobs, focusJob);
+
+    updateOutputProgress(focusJob);
+
+  }
+
+  private void updateOutputProgress(RenderJob job) {
+
+    if (outputProgressBox == null || outputProgressBar == null || outputProgressLabel == null) {
+
+      return;
+
+    }
+
+    boolean show = job != null && job.getStatus() == JobStatus.PROCESSING;
+
+    outputProgressBox.setVisible(show);
+
+    outputProgressBox.setManaged(show);
+
+    if (!show) {
+
+      outputProgressBar.setProgress(-1);
+
+      outputProgressLabel.setText("准备渲染");
+
+      return;
+
+    }
+
+    Integer progress = jobProgress.get(job.getId());
+
+    if (job.getProcessingStage() == ProcessingStage.RENDERING && progress != null) {
+
+      outputProgressBar.setProgress(progress / 100.0);
+
+      outputProgressLabel.setText(progress + "%");
+
+      return;
+
+    }
+
+    outputProgressBar.setProgress(-1);
+
+    outputProgressLabel.setText(
+
+        job.getProcessingStage() != null && job.getProcessingStage() != ProcessingStage.NONE
+
+            ? formatProcessingStageZh(job.getProcessingStage())
+
+            : "处理中");
 
   }
 
@@ -5460,6 +6041,26 @@ public class MainViewController implements Initializable {
 
     if (jobList != null) {
 
+      jobList.skinProperty().addListener((obs, oldSkin, newSkin) -> {
+        if (newSkin != null) {
+          Platform.runLater(() -> {
+            try {
+              for (javafx.scene.Node node : jobList.lookupAll(".scroll-bar")) {
+                if (node instanceof javafx.scene.control.ScrollBar sb
+                    && sb.getOrientation() == javafx.geometry.Orientation.VERTICAL) {
+                  sb.valueProperty().addListener((o, ov, nv) -> {
+                    if (nv.doubleValue() >= 0.95 && jobListHasMore) {
+                      manimExecutorService.execute(this::loadMoreJobPages);
+                    }
+                  });
+                }
+              }
+            } catch (Exception ignored) {
+            }
+          });
+        }
+      });
+
       jobList.setOnMouseClicked(e -> {
 
         if (e.isControlDown() && jobList.getSelectionModel().getSelectedItem() != null) {
@@ -5513,7 +6114,7 @@ public class MainViewController implements Initializable {
           if (empty || item == null) {
 
             setText(null);
-
+            setGraphic(null);
             setTooltip(null);
 
             getStyleClass().removeAll("job-cell-fallback", "job-cell-failed", "job-cell-selected");
@@ -5548,47 +6149,59 @@ public class MainViewController implements Initializable {
 
             
 
-            String st = displayJobState(item);
+            String statusIcon = switch (item.getStatus()) {
+              case COMPLETED -> "✓";
+              case FAILED -> "✗";
+              case PROCESSING -> "●";
+              case QUEUED -> "○";
+            };
 
-            String line = st;
-
+            String metaLine = displayJobState(item);
             if (item.getProcessingStage() != null && item.getProcessingStage() != ProcessingStage.NONE) {
-
-              line += " · " + item.getProcessingStage();
-
+              metaLine += " · " + item.getProcessingStage();
             }
-
-            line += " · " + item.getOutputMode() + "/" + item.getVideoQuality()
-
+            metaLine += " · " + item.getOutputMode() + "/" + item.getVideoQuality()
                 + (item.getJobKind() == JobKind.MODIFY ? " · 改" : "");
-
             if (item.isFavorited()) {
-
-              line = "★ " + line;
-
+              metaLine = "★ " + metaLine;
             }
-
             if (item.isFallbackModeActive()) {
-
-              line += " 保底";
-
+              metaLine += " 保底";
             }
 
-            line += "\n" + truncate(item.getConcept(), 68);
+            String conceptText = truncate(item.getConcept(), 72);
 
-            if (item.getFailureSummary() != null && !item.getFailureSummary().isBlank()) {
+            String failLine = (item.getFailureSummary() != null && !item.getFailureSummary().isBlank())
+                ? "! " + truncate(item.getFailureSummary(), 60) : null;
 
-              line += "\n  ! " + truncate(item.getFailureSummary(), 56);
+            setText(null);
 
+            javafx.scene.text.Text icon = new javafx.scene.text.Text(statusIcon);
+            icon.getStyleClass().add("job-cell-status");
+            icon.setFill(switch (item.getStatus()) {
+              case COMPLETED -> javafx.scene.paint.Color.web("#2e7d32");
+              case FAILED -> javafx.scene.paint.Color.web("#c62828");
+              case PROCESSING -> javafx.scene.paint.Color.web("#1565c0");
+              case QUEUED -> javafx.scene.paint.Color.web("#9e9e9e");
+            });
+
+            javafx.scene.text.Text meta = new javafx.scene.text.Text(metaLine);
+            meta.getStyleClass().add("job-cell-meta");
+
+            javafx.scene.text.Text concept = new javafx.scene.text.Text(conceptText);
+            concept.getStyleClass().add("job-cell-concept");
+
+            VBox textBox = new VBox(2, meta, concept);
+            if (failLine != null) {
+              javafx.scene.text.Text fail = new javafx.scene.text.Text(failLine);
+              fail.setFill(javafx.scene.paint.Color.web("#c62828"));
+              fail.setStyle("-fx-font-size: 10px;");
+              textBox.getChildren().add(fail);
             }
 
-            if (item.getOutputMediaPath() != null && !item.getOutputMediaPath().isBlank()) {
-
-              line += "\n  " + truncate(item.getOutputMediaPath(), 88);
-
-            }
-
-            setText(line);
+            HBox cellBox = new HBox(8, icon, textBox);
+            cellBox.setAlignment(javafx.geometry.Pos.CENTER_LEFT);
+            setGraphic(cellBox);
 
             
 
@@ -5681,47 +6294,23 @@ public class MainViewController implements Initializable {
             ? jobFilterChoice.getSelectionModel().getSelectedItem()
             : "全部";
 
+    currentSearchKeyword = keyword != null ? keyword : "";
+    currentFilterName = filter != null ? filter : "全部";
+    long generation = jobListQueryGeneration.incrementAndGet();
+    jobListPage = 0;
+    jobPageLoadInFlight.set(false);
+
     manimExecutorService.execute(() -> {
       try {
-        List<RenderJob> jobs;
-
-        if ("收藏".equals(filter)) {
-          jobs = renderJobService.listFavorited();
-          if (keyword != null && !keyword.isBlank()) {
-            String kw = keyword.toLowerCase();
-            jobs = jobs.stream()
-                .filter(j -> j.getConcept() != null && j.getConcept().toLowerCase().contains(kw))
-                .collect(java.util.stream.Collectors.toList());
-          }
-        } else {
-          JobStatus status = switch (filter) {
-            case "成功" -> JobStatus.COMPLETED;
-            case "失败" -> JobStatus.FAILED;
-            case "草稿", "保底" -> null; // special handling
-            default -> null;
-          };
-
-          if ("保底".equals(filter)) {
-            jobs = renderJobService.searchJobs(keyword);
-            jobs = jobs.stream()
-                .filter(RenderJob::isFallbackModeActive)
-                .collect(java.util.stream.Collectors.toList());
-          } else if ("草稿".equals(filter)) {
-            jobs = renderJobService.searchJobs(keyword);
-            jobs = jobs.stream()
-                .filter(j -> "草稿".equals(displayJobState(j)))
-                .collect(java.util.stream.Collectors.toList());
-          } else {
-            jobs = renderJobService.searchAndFilter(keyword, status);
-          }
-        }
-
-        List<RenderJob> resultJobs = jobs;
+        JobPageResult result = fetchJobPage(currentSearchKeyword, currentFilterName, 0, JOB_PAGE_SIZE);
         Platform.runLater(() -> {
-          jobList.setItems(FXCollections.observableArrayList(resultJobs));
-          if (historyCountLabel != null) {
-            historyCountLabel.setText(String.format("%02d", resultJobs.size()));
+          if (generation != jobListQueryGeneration.get()) {
+            return;
           }
+          totalJobCount = result.totalCount();
+          jobListHasMore = result.hasMore();
+          jobList.setItems(FXCollections.observableArrayList(result.jobs()));
+          updateHistoryCountLabel();
         });
       } catch (Exception e) {
         Platform.runLater(() -> appendLog("搜索/筛选失败: " + e.getMessage()));
@@ -5895,7 +6484,7 @@ public class MainViewController implements Initializable {
 
             appendJobLog(job.getId(), "--- 开始执行重试任务 ---");
 
-            renderJobService.runAiWorkflowAsync(job.getId(), jobUiLog(job.getId()), this::touchUi);
+            startAiWorkflow(job.getId());
 
           }
 
@@ -5949,7 +6538,7 @@ public class MainViewController implements Initializable {
 
             appendJobLog(job.getId(), "--- 开始执行保底重试任务 ---");
 
-            renderJobService.runAiWorkflowAsync(job.getId(), jobUiLog(job.getId()), this::touchUi);
+            startAiWorkflow(job.getId());
 
           }
 

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.mathanim.ui.HistoryController"
+      spacing="8" styleClass="output-history" minHeight="160">
+  <padding>
+    <Insets bottom="14" left="14" right="14" top="12"/>
+  </padding>
+  <FlowPane alignment="CENTER_LEFT" hgap="6" vgap="6" styleClass="history-toolbar">
+    <Label text="任务" styleClass="history-cap"/>
+    <Label text=" · " styleClass="history-sep"/>
+    <Label fx:id="historyCountLabel" text="00" styleClass="history-count"/>
+    <Label text=" 条" styleClass="history-sub"/>
+    <Region HBox.hgrow="ALWAYS"/>
+    <Button text="题干" focusTraversable="false" onAction="#onViewJobConcept"
+            styleClass="button,btn-zen-ghost"/>
+    <Button text="复制" focusTraversable="false" onAction="#onCopyJobConcept"
+            styleClass="button,btn-zen-ghost"/>
+    <Button text="删除" focusTraversable="false" onAction="#onDeleteJob"
+            styleClass="button,btn-zen-danger"/>
+  </FlowPane>
+  <HBox spacing="8" alignment="CENTER_LEFT" styleClass="history-filter-row">
+    <TextField fx:id="jobSearchField" promptText="搜索任务..."
+               styleClass="zen-input,history-search-field" prefWidth="220" HBox.hgrow="ALWAYS"/>
+    <ChoiceBox fx:id="jobFilterChoice" prefWidth="120" styleClass="zen-choice"/>
+    <Button fx:id="jobToggleFavoriteButton" text="★" focusTraversable="false"
+            onAction="#onToggleFavorite" styleClass="button,btn-zen-ghost"
+            disable="true" minWidth="32"/>
+  </HBox>
+  <HBox spacing="6" alignment="CENTER_LEFT" fx:id="batchOperationBar"
+        visible="false" managed="false" styleClass="batch-operation-bar">
+    <Label fx:id="batchSelectionLabel" text="已选 0 项" styleClass="zen-hint"/>
+    <Region HBox.hgrow="ALWAYS"/>
+    <Button text="批量删除" focusTraversable="false" onAction="#onBatchDelete"
+            styleClass="button,btn-zen-danger"/>
+    <Button text="批量重试" focusTraversable="false" onAction="#onBatchRetry"
+            styleClass="button,btn-zen-soft"/>
+    <Button text="批量保底重试" focusTraversable="false" onAction="#onBatchRetryFallback"
+            styleClass="button,btn-zen-outline"/>
+  </HBox>
+  <ListView fx:id="jobList" minHeight="96" prefHeight="160" VBox.vgrow="ALWAYS"/>
+</VBox>
